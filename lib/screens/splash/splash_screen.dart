@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen> {
             SizedBox(height: 20),
 
             Text(
-              "NurseCare",
+              "MediConnect",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 34,
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
             SizedBox(height: 10),
 
             Text(
-              "Caring Beyond Medicine",
+              "Connecting Care, Doctors & Patients",
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 18,

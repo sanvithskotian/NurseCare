@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../auth/login_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -7,7 +8,7 @@ class RoleSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("NurseCare"),
+        title: const Text("MediConnect"),
         centerTitle: true,
       ),
       body: Padding(
@@ -17,7 +18,7 @@ class RoleSelectionScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             const Text(
-              "Select Your Role",
+              "Select Your Portal",
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -79,10 +80,11 @@ class RoleSelectionScreen extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("$title selected"),
-            ),
+          Navigator.push(
+           context,
+           MaterialPageRoute(
+            builder: (_) => LoginScreen(role: title),
+           ),
           );
         },
         child: Column(

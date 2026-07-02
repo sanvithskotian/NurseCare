@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'screens/splash/splash_screen.dart';
 
 void main() {
-  runApp(const NurseCareApp());
+  runApp(const MediConnectApp());
 }
 
-class NurseCareApp extends StatelessWidget {
-  const NurseCareApp({super.key});
+class MediConnectApp extends StatelessWidget {
+  const MediConnectApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'NurseCare',
+      title: 'MediConnect',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.blue,
