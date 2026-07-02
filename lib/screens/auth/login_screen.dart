@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../patient/patient_dashboard.dart';
+import '../nurse/nurse_dashboard.dart';
+import '../doctor/doctor_dashboard.dart';
+import '../management/management_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   final String role;
@@ -110,11 +114,42 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 52,
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${widget.role} login clicked'),
-                    ),
-                  );
+
+                  if (widget.role == "Patient") {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PatientDashboard(),
+                      ),
+                   );
+                  }
+
+                  else if (widget.role == "Nurse") {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NurseDashboard(),
+                      ),
+                    );
+                  }
+
+                  else if (widget.role == "Doctor") {
+                     Navigator.pushReplacement(
+                       context,
+                       MaterialPageRoute(
+                         builder: (_) => const DoctorDashboard(),
+                       ),
+                     );
+                  }
+
+                  else if (widget.role == "Management") {
+                     Navigator.pushReplacement(
+                       context,
+                       MaterialPageRoute(
+                         builder: (_) => const ManagementDashboard(),
+                       ),
+                     );
+                  }
                 },
                 child: const Text(
                   'Login',
