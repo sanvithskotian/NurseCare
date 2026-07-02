@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/splash/splash_screen.dart';
 
 void main() {
   runApp(const NurseCareApp());
@@ -18,17 +19,7 @@ class NurseCareApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Text(
-            'Welcome to NurseCare 🩺',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
+      home: const SplashScreen(),
     );
   }
 }
