@@ -1,74 +1,80 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
-import 'doctor_prescription_screen.dart';
 import 'doctor_appointments_screen.dart';
+import 'doctor_prescription_screen.dart';
 
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final doctor = DummyData.doctor;
     final patient = DummyData.patient;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Doctor Dashboard"),
-        centerTitle: true,
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Card(
-              elevation: 4,
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.person),
-                ),
-                title: Text(patient.name),
-                subtitle: Text(
-                  "ID: ${patient.id} | Age: ${patient.age}",
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildCard(
-                    context,
-                    "Patients",
-                    Icons.people,
-                    null,
+                  Text(
+                    "Welcome, ${doctor.name}",
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  _buildCard(
-                    context,
-                    "Diagnosis",
-                    Icons.medical_information,
-                    null,
-                  ),
-                  _buildCard(
-                    context,
-                    "Prescription",
-                    Icons.medication,
-                    const DoctorPrescriptionScreen(),
-                  ),
-                  _buildCard(
-                    context,
-                    "Appointments",
-                    Icons.calendar_month,
-                    const DoctorAppointmentsScreen(),
-                  ),
+                  const SizedBox(height: 8),
+                  Text("Specialization: ${doctor.specialization}"),
+                  Text("Current Patient: ${patient.name}"),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 20),
+
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            children: [
+              _buildCard(
+                context,
+                "Patients",
+                Icons.people,
+                null,
+              ),
+              _buildCard(
+                context,
+                "Diagnosis",
+                Icons.medical_information,
+                null,
+              ),
+              _buildCard(
+                context,
+                "Prescription",
+                Icons.medication,
+                const DoctorPrescriptionScreen(),
+              ),
+              _buildCard(
+                context,
+                "Appointments",
+                Icons.calendar_month,
+                const DoctorAppointmentsScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -94,7 +100,11 @@ class DoctorDashboard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50),
+            Icon(
+              icon,
+              size: 45,
+              color: Colors.teal,
+            ),
             const SizedBox(height: 10),
             Text(title),
           ],

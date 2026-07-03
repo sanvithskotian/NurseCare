@@ -1,73 +1,58 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
-import 'vitals_screen.dart';
 import 'nurse_notes_screen.dart';
+import 'vitals_screen.dart';
 
 class NurseDashboard extends StatelessWidget {
   const NurseDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final nurse = DummyData.nurse;
     final patient = DummyData.patient;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text("Nurse Dashboard"),
-        centerTitle: true,
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Card(
-              child: ListTile(
-                leading: const CircleAvatar(
-                  child: Icon(Icons.person),
-                ),
-                title: Text(patient.name),
-                subtitle: Text(
-                  "ID: ${patient.id} | Blood Group: ${patient.bloodGroup}",
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildCard(
-                    context,
-                    "Patients",
-                    Icons.people,
-                    null,
+                  Text(
+                    "Welcome, ${nurse.name}",
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  _buildCard(
-                    context,
-                    "Vitals",
-                    Icons.favorite,
-                    const VitalsScreen(),
-                  ),
-                  _buildCard(
-                    context,
-                    "Notes",
-                    Icons.note,
-                    const NurseNotesScreen(),
-                  ),
-                  _buildCard(
-                    context,
-                    "Tasks",
-                    Icons.task,
-                    null,
-                  ),
+                  const SizedBox(height: 8),
+                  Text("Department: ${nurse.department}"),
+                  Text("Assigned Patient: ${patient.name}"),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            children: [
+              _buildCard(context, "Patients", Icons.people, null),
+              _buildCard(context, "Vitals", Icons.favorite, const VitalsScreen()),
+              _buildCard(context, "Notes", Icons.note, const NurseNotesScreen()),
+              _buildCard(context, "Tasks", Icons.task, null),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -85,15 +70,13 @@ class NurseDashboard extends StatelessWidget {
             : () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => screen,
-                  ),
+                  MaterialPageRoute(builder: (_) => screen),
                 );
               },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50),
+            Icon(icon, size: 45, color: Colors.teal),
             const SizedBox(height: 10),
             Text(title),
           ],
