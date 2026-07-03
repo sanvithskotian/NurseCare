@@ -16,69 +16,73 @@ class ManagementDashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Management Dashboard"),
-        centerTitle: true,
       ),
-      body: Padding(
-  padding: const EdgeInsets.all(16),
-  child: Column(
-    children: [
-      Expanded(
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 15,
-          mainAxisSpacing: 15,
-          children: [
-            _buildStatCard("Patients", totalPatients.toString(), Icons.people, Colors.blue),
-            _buildStatCard("Doctors", totalDoctors.toString(), Icons.local_hospital, Colors.green),
-            _buildStatCard("Nurses", totalNurses.toString(), Icons.medical_services, Colors.orange),
-            _buildStatCard("Appointments", totalAppointments.toString(), Icons.calendar_month, Colors.purple),
-            _buildStatCard("Prescriptions", totalPrescriptions.toString(), Icons.medication, Colors.red),
-          ],
-        ),
-      ),
-      SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ReportsScreen(),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Welcome, Admin",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text("Patients: $totalPatients"),
+                  Text("Doctors: $totalDoctors"),
+                  Text("Nurses: $totalNurses"),
+                ],
               ),
-            );
-          },
-          icon: const Icon(Icons.bar_chart),
-          label: const Text("View Hospital Reports"),
-        ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            children: [
+              _buildStatCard("Patients", totalPatients.toString(), Icons.people),
+              _buildStatCard("Doctors", totalDoctors.toString(), Icons.local_hospital),
+              _buildStatCard("Nurses", totalNurses.toString(), Icons.medical_services),
+              _buildStatCard("Appointments", totalAppointments.toString(), Icons.calendar_month),
+              _buildStatCard("Prescriptions", totalPrescriptions.toString(), Icons.medication),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ReportsScreen()),
+              );
+            },
+            icon: const Icon(Icons.bar_chart),
+            label: const Text("View Hospital Reports"),
+          ),
+        ],
       ),
-    ],
-  ),
-),
     );
   }
 
-  Widget _buildStatCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildStatCard(String title, String value, IconData icon) {
     return Card(
-      elevation: 5,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 50,
-            color: color,
-          ),
+          Icon(icon, size: 45, color: Colors.teal),
           const SizedBox(height: 10),
           Text(
             value,
             style: const TextStyle(
-              fontSize: 28,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
             ),
           ),
