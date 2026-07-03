@@ -5,6 +5,7 @@ import '../models/appointment.dart';
 import '../models/prescription.dart';
 import '../models/nursing_note.dart';
 import '../models/diagnosis.dart';
+import '../models/task.dart';
 
 class DummyData {
   static Patient patient = Patient(
@@ -66,5 +67,17 @@ class DummyData {
     diagnosis: "Viral Fever",
     date: "1 July 2026",
    ),
- ];
+  ];
+  static final List<Task> tasks = [
+   Task(
+    id: "T001",
+    title: "Check Blood Pressure",
+    completed: false,
+   ),
+   Task(
+    id: "T002",
+    title: "Give Paracetamol",
+    completed: false,
+   ),
+  ];
 }  
