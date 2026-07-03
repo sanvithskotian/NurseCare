@@ -18,10 +18,21 @@ class RoleSelectionScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             const Text(
-              "Select Your Portal",
+               "MediConnect",
+               style: TextStyle(
+                 fontSize: 32,
+                 fontWeight: FontWeight.bold,
+                 color: Colors.teal,
+                 ),
+            ),
+
+            SizedBox(height: 8),
+
+            Text(
+              "Hospital Management System",
               style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.grey,
               ),
             ),
 
@@ -73,7 +84,7 @@ class RoleSelectionScreen extends StatelessWidget {
     Color color,
   ) {
     return Card(
-      elevation: 5,
+      elevation: 8,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
@@ -90,10 +101,14 @@ class RoleSelectionScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 60,
-              color: color,
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.grey.shade100,
+              child: Icon(
+                icon,
+                size: 35,
+                color: color,
+              ),
             ),
             const SizedBox(height: 10),
             Text(
