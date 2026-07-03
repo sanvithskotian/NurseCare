@@ -1,34 +1,78 @@
 import 'package:flutter/material.dart';
+import '../../services/dummy_data.dart';
 
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final patient = DummyData.patient;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Doctor Dashboard"),
         centerTitle: true,
       ),
-      body: GridView.count(
-        padding: const EdgeInsets.all(20),
-        crossAxisCount: 2,
-        children: const [
-          DashboardCard("Patients", Icons.people),
-          DashboardCard("Diagnosis", Icons.medical_information),
-          DashboardCard("Prescription", Icons.medication),
-          DashboardCard("Appointments", Icons.calendar_month),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Card(
+              elevation: 4,
+              child: ListTile(
+                leading: const CircleAvatar(
+                  child: Icon(Icons.person),
+                ),
+                title: Text(patient.name),
+                subtitle: Text(
+                  "ID: ${patient.id} | Age: ${patient.age}",
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                children: const [
+                  _DashboardCard(
+                    title: "Patients",
+                    icon: Icons.people,
+                  ),
+                  _DashboardCard(
+                    title: "Diagnosis",
+                    icon: Icons.medical_information,
+                  ),
+                  _DashboardCard(
+                    title: "Prescription",
+                    icon: Icons.medication,
+                  ),
+                  _DashboardCard(
+                    title: "Appointments",
+                    icon: Icons.calendar_month,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class DashboardCard extends StatelessWidget {
+class _DashboardCard extends StatelessWidget {
   final String title;
   final IconData icon;
 
-  const DashboardCard(this.title, this.icon, {super.key});
+  const _DashboardCard({
+    required this.title,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
