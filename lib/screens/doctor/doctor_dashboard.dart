@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'doctor_prescription_screen.dart';
+import 'doctor_appointments_screen.dart';
 
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key});
@@ -61,7 +62,7 @@ class DoctorDashboard extends StatelessWidget {
                     context,
                     "Appointments",
                     Icons.calendar_month,
-                    null,
+                    const DoctorAppointmentsScreen(),
                   ),
                 ],
               ),
