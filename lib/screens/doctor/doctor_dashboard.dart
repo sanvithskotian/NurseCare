@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'doctor_appointments_screen.dart';
 import 'doctor_prescription_screen.dart';
+import 'doctor_patients_screen.dart';
 
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key});
@@ -52,20 +53,20 @@ class DoctorDashboard extends StatelessWidget {
                 context,
                 "Patients",
                 Icons.people,
-                null,
+                const DoctorPatientsScreen(),
               ),
-              _buildCard(
-                context,
-                "Diagnosis",
-                Icons.medical_information,
-                null,
-              ),
-              _buildCard(
-                context,
-                "Prescription",
-                Icons.medication,
-                const DoctorPrescriptionScreen(),
-              ),
+              // _buildCard(
+              //   context,
+              //   "Diagnosis",
+              //   Icons.medical_information,
+              //   null,
+              // ),
+              // _buildCard(
+              //   context,
+              //   "Prescription",
+              //   Icons.medication,
+              //   const DoctorPrescriptionScreen(),
+              // ),
               _buildCard(
                 context,
                 "Appointments",

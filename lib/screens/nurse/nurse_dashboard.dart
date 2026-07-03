@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'nurse_notes_screen.dart';
 import 'vitals_screen.dart';
+import 'nurse_patients_screen.dart';
 
 class NurseDashboard extends StatelessWidget {
   const NurseDashboard({super.key});
@@ -46,10 +47,10 @@ class NurseDashboard extends StatelessWidget {
             crossAxisSpacing: 15,
             mainAxisSpacing: 15,
             children: [
-              _buildCard(context, "Patients", Icons.people, null),
-              _buildCard(context, "Vitals", Icons.favorite, const VitalsScreen()),
-              _buildCard(context, "Notes", Icons.note, const NurseNotesScreen()),
-              _buildCard(context, "Tasks", Icons.task, null),
+              _buildCard(context, "Patients", Icons.people, const NursePatientsScreen(),),
+              // _buildCard(context, "Vitals", Icons.favorite, const VitalsScreen()),
+              // _buildCard(context, "Notes", Icons.note, const NurseNotesScreen()),
+             _buildCard(context, "Tasks", Icons.task, null),
             ],
           ),
         ],
