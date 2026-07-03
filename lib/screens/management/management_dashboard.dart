@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../services/dummy_data.dart';
 import 'reports_screen.dart';
 
 class ManagementDashboard extends StatelessWidget {
@@ -7,12 +6,6 @@ class ManagementDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalPatients = 1;
-    final totalDoctors = 1;
-    final totalNurses = 1;
-    final totalAppointments = DummyData.appointments.length;
-    final totalPrescriptions = DummyData.prescriptions.length;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Management Dashboard"),
@@ -20,74 +13,65 @@ class ManagementDashboard extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
+          const Card(
             child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Welcome, Admin",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text("Patients: $totalPatients"),
-                  Text("Doctors: $totalDoctors"),
-                  Text("Nurses: $totalNurses"),
-                ],
+              padding: EdgeInsets.all(20),
+              child: Text(
+                "Welcome, Admin\nManage hospital operations from here.",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 15,
-            mainAxisSpacing: 15,
-            children: [
-              _buildStatCard("Patients", totalPatients.toString(), Icons.people),
-              _buildStatCard("Doctors", totalDoctors.toString(), Icons.local_hospital),
-              _buildStatCard("Nurses", totalNurses.toString(), Icons.medical_services),
-              _buildStatCard("Appointments", totalAppointments.toString(), Icons.calendar_month),
-              _buildStatCard("Prescriptions", totalPrescriptions.toString(), Icons.medication),
-            ],
+
+          _managementTile(
+            context,
+            "Manage Patients",
+            Icons.people,
+            null,
           ),
-          const SizedBox(height: 20),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ReportsScreen()),
-              );
-            },
-            icon: const Icon(Icons.bar_chart),
-            label: const Text("View Hospital Reports"),
+          _managementTile(
+            context,
+            "Manage Doctors",
+            Icons.local_hospital,
+            null,
+          ),
+          _managementTile(
+            context,
+            "Manage Nurses",
+            Icons.medical_services,
+            null,
+          ),
+          _managementTile(
+            context,
+            "Hospital Reports",
+            Icons.bar_chart,
+            const ReportsScreen(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon) {
+  Widget _managementTile(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Widget? screen,
+  ) {
     return Card(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 45, color: Colors.teal),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(title),
-        ],
+      child: ListTile(
+        leading: Icon(icon, color: Colors.teal),
+        title: Text(title),
+        trailing: const Icon(Icons.arrow_forward_ios),
+        onTap: screen == null
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => screen),
+                );
+              },
       ),
     );
   }

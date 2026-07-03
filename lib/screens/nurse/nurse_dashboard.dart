@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
-import 'nurse_notes_screen.dart';
-import 'vitals_screen.dart';
 import 'nurse_patients_screen.dart';
 
 class NurseDashboard extends StatelessWidget {
