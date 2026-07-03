@@ -3,6 +3,7 @@ import 'appointments_screen.dart';
 import 'medical_history_screen.dart';
 import 'prescriptions_screen.dart';
 import 'profile_screen.dart';
+import 'book_appointment_screen.dart';
 
 class PatientDashboard extends StatelessWidget {
   const PatientDashboard({super.key});
@@ -24,7 +25,7 @@ class PatientDashboard extends StatelessWidget {
             context,
             "Appointments",
             Icons.calendar_month,
-            const AppointmentsScreen(),
+            const BookAppointmentScreen(),
           ),
           _buildCard(
             context,
