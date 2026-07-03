@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'vitals_screen.dart';
+import 'nurse_notes_screen.dart';
 
 class NurseDashboard extends StatelessWidget {
   const NurseDashboard({super.key});
@@ -54,7 +55,7 @@ class NurseDashboard extends StatelessWidget {
                     context,
                     "Notes",
                     Icons.note,
-                    null,
+                    const NurseNotesScreen(),
                   ),
                   _buildCard(
                     context,
