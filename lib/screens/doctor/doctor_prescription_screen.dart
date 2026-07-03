@@ -15,10 +15,18 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
   final dosageController = TextEditingController();
   final durationController = TextEditingController();
 
+  @override
+  void dispose() {
+    medicineController.dispose();
+    dosageController.dispose();
+    durationController.dispose();
+    super.dispose();
+  }
+
   void addPrescription() {
-    if (medicineController.text.isEmpty ||
-        dosageController.text.isEmpty ||
-        durationController.text.isEmpty) {
+    if (medicineController.text.trim().isEmpty ||
+        dosageController.text.trim().isEmpty ||
+        durationController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields")),
       );
@@ -30,9 +38,9 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
         Prescription(
           id: "PR${DummyData.prescriptions.length + 1}",
           doctorName: DummyData.doctor.name,
-          medicine: medicineController.text,
-          dosage: dosageController.text,
-          duration: durationController.text,
+          medicine: medicineController.text.trim(),
+          dosage: dosageController.text.trim(),
+          duration: durationController.text.trim(),
         ),
       );
     });
@@ -46,39 +54,54 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
     );
   }
 
+  Widget buildInputField({
+    required String label,
+    required TextEditingController controller,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.text,
+      textInputAction: TextInputAction.next,
+      cursorColor: Colors.blue,
+      style: const TextStyle(
+        color: Colors.black,
+        fontSize: 18,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.black54),
+        filled: true,
+        fillColor: Colors.white,
+        border: const OutlineInputBorder(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final prescriptions = DummyData.prescriptions;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Doctor Prescriptions"),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          TextField(
+          buildInputField(
+            label: "Medicine Name",
             controller: medicineController,
-            decoration: const InputDecoration(
-              labelText: "Medicine Name",
-              border: OutlineInputBorder(),
-            ),
           ),
           const SizedBox(height: 12),
-          TextField(
+          buildInputField(
+            label: "Dosage",
             controller: dosageController,
-            decoration: const InputDecoration(
-              labelText: "Dosage",
-              border: OutlineInputBorder(),
-            ),
           ),
           const SizedBox(height: 12),
-          TextField(
+          buildInputField(
+            label: "Duration",
             controller: durationController,
-            decoration: const InputDecoration(
-              labelText: "Duration",
-              border: OutlineInputBorder(),
-            ),
           ),
           const SizedBox(height: 12),
           ElevatedButton(

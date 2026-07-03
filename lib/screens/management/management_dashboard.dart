@@ -1,43 +1,89 @@
 import 'package:flutter/material.dart';
+import '../../services/dummy_data.dart';
 
 class ManagementDashboard extends StatelessWidget {
   const ManagementDashboard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final totalPatients = 1;
+    final totalDoctors = 1;
+    final totalNurses = 1;
+    final totalAppointments = DummyData.appointments.length;
+    final totalPrescriptions = DummyData.prescriptions.length;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Management Dashboard"),
         centerTitle: true,
       ),
-      body: GridView.count(
-        padding: const EdgeInsets.all(20),
-        crossAxisCount: 2,
-        children: const [
-          DashboardCard("Doctors", Icons.local_hospital),
-          DashboardCard("Nurses", Icons.medical_services),
-          DashboardCard("Patients", Icons.people),
-          DashboardCard("Reports", Icons.bar_chart),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          children: [
+            _buildStatCard(
+              "Patients",
+              totalPatients.toString(),
+              Icons.people,
+              Colors.blue,
+            ),
+            _buildStatCard(
+              "Doctors",
+              totalDoctors.toString(),
+              Icons.local_hospital,
+              Colors.green,
+            ),
+            _buildStatCard(
+              "Nurses",
+              totalNurses.toString(),
+              Icons.medical_services,
+              Colors.orange,
+            ),
+            _buildStatCard(
+              "Appointments",
+              totalAppointments.toString(),
+              Icons.calendar_month,
+              Colors.purple,
+            ),
+            _buildStatCard(
+              "Prescriptions",
+              totalPrescriptions.toString(),
+              Icons.medication,
+              Colors.red,
+            ),
+          ],
+        ),
       ),
     );
   }
-}
 
-class DashboardCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const DashboardCard(this.title, this.icon, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
+      elevation: 5,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 50),
+          Icon(
+            icon,
+            size: 50,
+            color: color,
+          ),
           const SizedBox(height: 10),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           Text(title),
         ],
       ),
