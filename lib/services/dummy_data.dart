@@ -2,6 +2,7 @@ import '../models/patient.dart';
 import '../models/doctor.dart';
 import '../models/nurse.dart';
 import '../models/appointment.dart';
+import '../models/prescription.dart';
 
 class DummyData {
   static Patient patient = Patient(
@@ -34,4 +35,14 @@ class DummyData {
       status: "Confirmed",
     ),
   ];
-}
+
+  static final List<Prescription> prescriptions = [
+    Prescription(
+      id: "PR001",
+      doctorName: "Dr. Smith",
+      medicine: "Paracetamol",
+      dosage: "500mg Twice Daily",
+      duration: "5 Days",
+   ),
+  ];
+}  

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
+import 'doctor_prescription_screen.dart';
 
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key});
@@ -27,7 +28,6 @@ class DoctorDashboard extends StatelessWidget {
                 subtitle: Text(
                   "ID: ${patient.id} | Age: ${patient.age}",
                 ),
-                trailing: const Icon(Icons.arrow_forward_ios),
               ),
             ),
 
@@ -38,22 +38,30 @@ class DoctorDashboard extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 15,
                 mainAxisSpacing: 15,
-                children: const [
-                  _DashboardCard(
-                    title: "Patients",
-                    icon: Icons.people,
+                children: [
+                  _buildCard(
+                    context,
+                    "Patients",
+                    Icons.people,
+                    null,
                   ),
-                  _DashboardCard(
-                    title: "Diagnosis",
-                    icon: Icons.medical_information,
+                  _buildCard(
+                    context,
+                    "Diagnosis",
+                    Icons.medical_information,
+                    null,
                   ),
-                  _DashboardCard(
-                    title: "Prescription",
-                    icon: Icons.medication,
+                  _buildCard(
+                    context,
+                    "Prescription",
+                    Icons.medication,
+                    const DoctorPrescriptionScreen(),
                   ),
-                  _DashboardCard(
-                    title: "Appointments",
-                    icon: Icons.calendar_month,
+                  _buildCard(
+                    context,
+                    "Appointments",
+                    Icons.calendar_month,
+                    null,
                   ),
                 ],
               ),
@@ -63,27 +71,33 @@ class DoctorDashboard extends StatelessWidget {
       ),
     );
   }
-}
 
-class _DashboardCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const _DashboardCard({
-    required this.title,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Widget? screen,
+  ) {
     return Card(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 50),
-          const SizedBox(height: 10),
-          Text(title),
-        ],
+      child: InkWell(
+        onTap: screen == null
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => screen,
+                  ),
+                );
+              },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 50),
+            const SizedBox(height: 10),
+            Text(title),
+          ],
+        ),
       ),
     );
   }
