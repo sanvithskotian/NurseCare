@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'reports_screen.dart';
+import 'manage_patients_screen.dart';
+import 'manage_doctors_screen.dart';
+import 'manage_nurses_screen.dart';
 
 class ManagementDashboard extends StatelessWidget {
   const ManagementDashboard({super.key});
@@ -28,19 +31,19 @@ class ManagementDashboard extends StatelessWidget {
             context,
             "Manage Patients",
             Icons.people,
-            null,
+            const ManagePatientsScreen(),
           ),
           _managementTile(
             context,
             "Manage Doctors",
             Icons.local_hospital,
-            null,
+            const ManageDoctorsScreen()
           ),
           _managementTile(
             context,
             "Manage Nurses",
             Icons.medical_services,
-            null,
+            const ManageNursesScreen()
           ),
           _managementTile(
             context,

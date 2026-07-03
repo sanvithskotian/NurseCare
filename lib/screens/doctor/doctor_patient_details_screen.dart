@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'doctor_prescription_screen.dart';
+import 'doctor_diagnosis_screen.dart';
 
 class DoctorPatientDetailsScreen extends StatelessWidget {
   const DoctorPatientDetailsScreen({super.key});
@@ -32,7 +33,7 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
             context,
             "Add Diagnosis",
             Icons.medical_information,
-            null,
+            const DoctorDiagnosisScreen(),
           ),
           _actionCard(
             context,

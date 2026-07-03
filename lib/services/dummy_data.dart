@@ -4,6 +4,7 @@ import '../models/nurse.dart';
 import '../models/appointment.dart';
 import '../models/prescription.dart';
 import '../models/nursing_note.dart';
+import '../models/diagnosis.dart';
 
 class DummyData {
   static Patient patient = Patient(
@@ -32,7 +33,7 @@ class DummyData {
       id: "A001",
       patientName: "John Doe",
       doctorName: "Dr. Smith",
-      date: "10 July 2026",
+      date: "1 July 2026",
       status: "Confirmed",
     ),
   ];
@@ -53,7 +54,17 @@ class DummyData {
       nurseName: "Mary Johnson",
       patientName: "John Doe",
       note: "Patient is stable. Vitals are normal.",
-      date: "10 July 2026",
+      date: "1 July 2026",
+   ),
+ ];
+
+  static final List<Diagnosis> diagnoses = [
+   Diagnosis(
+    id: "D001",
+    doctorName: "Dr. Smith",
+    patientName: "John Doe",
+    diagnosis: "Viral Fever",
+    date: "1 July 2026",
    ),
  ];
 }  
