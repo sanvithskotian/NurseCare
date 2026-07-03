@@ -3,7 +3,7 @@ class Appointment {
   final String patientName;
   final String doctorName;
   final String date;
-  final String status;
+  String status;
 
   Appointment({
     required this.id,
