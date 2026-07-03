@@ -1,46 +1,36 @@
 import 'package:flutter/material.dart';
+import '../../services/dummy_data.dart';
 
 class VitalsScreen extends StatelessWidget {
   const VitalsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final vitals = DummyData.vitals;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Patient Vitals"),
+        title: const Text("Vitals History"),
       ),
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        children: const [
-          Card(
+        itemCount: vitals.length,
+        itemBuilder: (context, index) {
+          final vital = vitals[index];
+
+          return Card(
             child: ListTile(
-              leading: Icon(Icons.favorite),
-              title: Text("Heart Rate"),
-              subtitle: Text("78 BPM"),
+              leading: const Icon(Icons.monitor_heart, color: Colors.teal),
+              title: Text(vital.dateTime),
+              subtitle: Text(
+                "Temp: ${vital.temperature}\n"
+                "BP: ${vital.bloodPressure}\n"
+                "Heart Rate: ${vital.heartRate}\n"
+                "Oxygen: ${vital.oxygenLevel}",
+              ),
             ),
-          ),
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.thermostat),
-              title: Text("Temperature"),
-              subtitle: Text("98.6 °F"),
-            ),
-          ),
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.monitor_heart),
-              title: Text("Blood Pressure"),
-              subtitle: Text("120 / 80"),
-            ),
-          ),
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.air),
-              title: Text("Oxygen Level"),
-              subtitle: Text("98%"),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

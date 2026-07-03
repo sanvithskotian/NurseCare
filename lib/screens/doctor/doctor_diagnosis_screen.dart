@@ -12,6 +12,23 @@ class DoctorDiagnosisScreen extends StatefulWidget {
 class _DoctorDiagnosisScreenState extends State<DoctorDiagnosisScreen> {
   final diagnosisController = TextEditingController();
 
+  String _formatDateTime(DateTime dateTime) {
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final year = dateTime.year;
+
+    final hour = dateTime.hour > 12
+      ? dateTime.hour - 12
+      : dateTime.hour == 0
+          ? 12
+          : dateTime.hour;
+
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour >= 12 ? "PM" : "AM";
+
+    return "$day/$month/$year, $hour:$minute $period";
+  }
+
   void addDiagnosis() {
     if (diagnosisController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -27,7 +44,7 @@ class _DoctorDiagnosisScreenState extends State<DoctorDiagnosisScreen> {
           doctorName: DummyData.doctor.name,
           patientName: DummyData.patient.name,
           diagnosis: diagnosisController.text.trim(),
-          date: "Today",
+          date: _formatDateTime(DateTime.now()),
         ),
       );
     });

@@ -6,6 +6,7 @@ import '../models/prescription.dart';
 import '../models/nursing_note.dart';
 import '../models/diagnosis.dart';
 import '../models/task.dart';
+import '../models/vital.dart';
 
 class DummyData {
   static Patient patient = Patient(
@@ -78,6 +79,17 @@ class DummyData {
     id: "T002",
     title: "Give Paracetamol",
     completed: false,
+   ),
+  ];
+  static final List<Vital> vitals = [
+   Vital(
+    id: "V001",
+    patientName: "John Doe",
+    temperature: "98.6 °F",
+    bloodPressure: "120/80",
+    heartRate: "78 BPM",
+    oxygenLevel: "98%",
+    dateTime: "10 July 2026, 09:00 AM",
    ),
   ];
 }  

@@ -12,6 +12,23 @@ class NurseNotesScreen extends StatefulWidget {
 class _NurseNotesScreenState extends State<NurseNotesScreen> {
   final noteController = TextEditingController();
 
+  String _formatDateTime(DateTime dateTime) {
+    final day = dateTime.day.toString().padLeft(2, '0');
+    final month = dateTime.month.toString().padLeft(2, '0');
+    final year = dateTime.year;
+
+    final hour = dateTime.hour > 12
+      ? dateTime.hour - 12
+      : dateTime.hour == 0
+          ? 12
+          : dateTime.hour;
+
+    final minute = dateTime.minute.toString().padLeft(2, '0');
+    final period = dateTime.hour >= 12 ? "PM" : "AM";
+
+    return "$day/$month/$year, $hour:$minute $period";
+  }
+
   void addNote() {
     if (noteController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -29,7 +46,7 @@ class _NurseNotesScreenState extends State<NurseNotesScreen> {
           nurseName: DummyData.nurse.name,
           patientName: DummyData.patient.name,
           note: noteController.text.trim(),
-          date: "Today",
+          date: _formatDateTime(DateTime.now()),
         ),
       );
     });

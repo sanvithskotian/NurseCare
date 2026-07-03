@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'nurse_notes_screen.dart';
 import 'vitals_screen.dart';
+import 'update_vitals_screen.dart';
 
 class NursePatientDetailsScreen extends StatelessWidget {
   const NursePatientDetailsScreen({super.key});
@@ -33,6 +34,12 @@ class NursePatientDetailsScreen extends StatelessWidget {
             context,
             "Update Vitals",
             Icons.favorite,
+            const UpdateVitalsScreen(),
+          ),
+          _actionCard(
+            context,
+            "Vitals History",
+            Icons.monitor_heart,
             const VitalsScreen(),
           ),
           _actionCard(
