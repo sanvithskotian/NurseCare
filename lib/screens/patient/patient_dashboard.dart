@@ -4,6 +4,8 @@ import 'book_appointment_screen.dart';
 import 'medical_history_screen.dart';
 import 'prescriptions_screen.dart';
 import 'profile_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../role_selection/role_selection_screen.dart';
 
 class PatientDashboard extends StatelessWidget {
   const PatientDashboard({super.key});
@@ -14,8 +16,26 @@ class PatientDashboard extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Patient Dashboard"),
-      ),
+  title: const Text("Patient Dashboard"),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.logout),
+      onPressed: () async {
+        await FirebaseAuth.instance.signOut();
+
+        if (!context.mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RoleSelectionScreen(),
+          ),
+          (route) => false,
+        );
+      },
+    ),
+  ],
+),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

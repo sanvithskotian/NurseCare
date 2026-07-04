@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'register_screen.dart';
 import '../patient/patient_dashboard.dart';
 import '../nurse/nurse_dashboard.dart';
 import '../doctor/doctor_dashboard.dart';
@@ -206,7 +206,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const Text("Don't have an account?"),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                          ),
+                      );
+                    },
                     child: const Text('Sign Up'),
                   ),
                 ],
