@@ -5,6 +5,7 @@ import '../patient/patient_dashboard.dart';
 import '../nurse/nurse_dashboard.dart';
 import '../doctor/doctor_dashboard.dart';
 import '../management/management_dashboard.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   final String role;
@@ -53,42 +54,67 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      if (widget.role == "Patient") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const PatientDashboard()),
-        );
-      } else if (widget.role == "Nurse") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const NurseDashboard()),
-        );
-      } else if (widget.role == "Doctor") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DoctorDashboard()),
-        );
-      } else if (widget.role == "Management") {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ManagementDashboard()),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      String message = "Login failed";
+      final email = FirebaseAuth.instance.currentUser!.email!;
 
-      if (e.code == "user-not-found") {
-        message = "No user found with this email";
-      } else if (e.code == "wrong-password") {
-        message = "Incorrect password";
-      } else if (e.code == "invalid-email") {
-        message = "Invalid email address";
-      }
+final query = await FirebaseFirestore.instance
+    .collection('users')
+    .where('email', isEqualTo: email)
+    .get();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    } finally {
+if (query.docs.isEmpty) {
+  throw Exception("User role not found");
+}
+
+final role = query.docs.first['role'];
+
+if (role == "patient" && widget.role == "Patient") {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const PatientDashboard(),
+    ),
+  );
+} else if (role == "doctor" && widget.role == "Doctor") {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const DoctorDashboard(),
+    ),
+  );
+} else if (role == "nurse" && widget.role == "Nurse") {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const NurseDashboard(),
+    ),
+  );
+} else if (role == "management" &&
+    widget.role == "Management") {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const ManagementDashboard(),
+    ),
+  );
+} else {
+  await FirebaseAuth.instance.signOut();
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        "Access denied for this portal",
+      ),
+    ),
+  );
+}
+     } on FirebaseAuthException catch (e) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text("Error: ${e.code}"),
+    ),
+  );
+}
+     finally {
       if (mounted) {
         setState(() {
           isLoading = false;

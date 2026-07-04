@@ -3,6 +3,8 @@ import 'reports_screen.dart';
 import 'manage_patients_screen.dart';
 import 'manage_doctors_screen.dart';
 import 'manage_nurses_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../role_selection/role_selection_screen.dart';
 
 class ManagementDashboard extends StatelessWidget {
   const ManagementDashboard({super.key});
@@ -12,6 +14,24 @@ class ManagementDashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Management Dashboard"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+
+              if (!context.mounted) return;
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RoleSelectionScreen(),
+                ),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

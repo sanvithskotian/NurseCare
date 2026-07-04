@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'nurse_patients_screen.dart';
 import 'tasks_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../role_selection/role_selection_screen.dart';
 
 class NurseDashboard extends StatelessWidget {
   const NurseDashboard({super.key});
@@ -14,6 +16,24 @@ class NurseDashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Nurse Dashboard"),
+         actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+
+              if (!context.mounted) return;
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const RoleSelectionScreen(),
+                ),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'doctor_appointments_screen.dart';
 import 'doctor_patients_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../role_selection/role_selection_screen.dart';
 
 class DoctorDashboard extends StatelessWidget {
   const DoctorDashboard({super.key});
@@ -13,8 +15,26 @@ class DoctorDashboard extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Doctor Dashboard"),
-      ),
+  title: const Text("Doctor Dashboard"),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.logout),
+      onPressed: () async {
+        await FirebaseAuth.instance.signOut();
+
+        if (!context.mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const RoleSelectionScreen(),
+          ),
+          (route) => false,
+        );
+      },
+    ),
+  ],
+),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
