@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
 import 'doctor_prescription_screen.dart';
 import 'doctor_diagnosis_screen.dart';
+import '../nurse/vitals_screen.dart';
 
 class DoctorPatientDetailsScreen extends StatelessWidget {
   const DoctorPatientDetailsScreen({super.key});
@@ -40,6 +41,12 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
             "Add Prescription",
             Icons.medication,
             const DoctorPrescriptionScreen(),
+          ),
+          _actionCard(
+            context,
+            "View Vitals History",
+            Icons.monitor_heart,
+            const VitalsScreen(),
           ),
         ],
       ),
