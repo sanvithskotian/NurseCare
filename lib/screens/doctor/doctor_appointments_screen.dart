@@ -14,7 +14,7 @@ class _DoctorAppointmentsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final appointments = DummyData.appointments;
+    final appointments = List.from(DummyData.appointments);
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +35,7 @@ class _DoctorAppointmentsScreenState
                     leading: const Icon(Icons.calendar_month),
                     title: Text(appointment.patientName),
                     subtitle: Text(
-                      "${appointment.doctorName}\n${appointment.date}",
+                      "Doctor: ${appointment.doctorName}\nDate: ${appointment.date}",
                     ),
                     trailing: Text(
                       appointment.status,
@@ -47,27 +47,30 @@ class _DoctorAppointmentsScreenState
 
                   if (appointment.status == "Pending")
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              appointment.status = "Approved";
-                            });
-                          },
-                          child: const Text("Approve"),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              appointment.status = "Rejected";
-                            });
-                          },
-                          child: const Text("Reject"),
-                        ),
-                      ],
-                    ),
+  children: [
+    Expanded(
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            appointment.status = "Approved";
+          });
+        },
+        child: const Text("Approve"),
+      ),
+    ),
+    const SizedBox(width: 10),
+    Expanded(
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            appointment.status = "Rejected";
+          });
+        },
+        child: const Text("Reject"),
+      ),
+    ),
+  ],
+),
                 ],
               ),
             ),

@@ -27,7 +27,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         Appointment(
           id: "A${DummyData.appointments.length + 1}",
           patientName: DummyData.patient.name,
-          doctorName: DummyData.doctor.name,
+          doctorName: DummyData.doctor.name.isEmpty ? "Dr. Smith" : DummyData.doctor.name,
           date: "${dateController.text.trim()} - ${timeController.text.trim()}",
           status: "Pending",
         ),
