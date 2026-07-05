@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/dummy_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MedicalHistoryScreen extends StatelessWidget {
   const MedicalHistoryScreen({super.key});
@@ -7,7 +8,6 @@ class MedicalHistoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final notes = DummyData.nursingNotes;
-    final diagnoses = DummyData.diagnoses;
 
     return Scaffold(
       appBar: AppBar(
@@ -27,20 +27,61 @@ class MedicalHistoryScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           const Text(
-            "Doctor Diagnoses",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
+  "Doctor Diagnoses",
+  style: TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+  ),
+),
+const SizedBox(height: 10),
 
-          ...diagnoses.map(
-            (diagnosis) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.medical_information),
-                title: Text(diagnosis.diagnosis),
-                subtitle: Text("${diagnosis.doctorName} • ${diagnosis.date}"),
-              ),
+StreamBuilder(
+  stream: FirebaseFirestore.instance
+      .collection('diagnoses')
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (snapshot.hasError) {
+      return const Text("Something went wrong");
+    }
+
+    if (snapshot.connectionState ==
+        ConnectionState.waiting) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    final diagnoses = snapshot.data!.docs;
+
+    if (diagnoses.isEmpty) {
+      return const Text(
+        "No diagnoses available",
+      );
+    }
+
+    return Column(
+      children: diagnoses.map((doc) {
+        final data =
+            doc.data() as Map<String, dynamic>;
+
+        return Card(
+          child: ListTile(
+            leading: const Icon(
+              Icons.medical_information,
+            ),
+            title: Text(
+              data['diagnosis'] ?? '',
+            ),
+            subtitle: Text(
+              "${data['doctorName'] ?? ''} • "
+              "${data['date'] ?? ''}",
             ),
           ),
+        );
+      }).toList(),
+    );
+  },
+),
 
           const SizedBox(height: 20),
 

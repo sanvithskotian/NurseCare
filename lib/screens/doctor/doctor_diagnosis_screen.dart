@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/diagnosis.dart';
-import '../../services/dummy_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DoctorDiagnosisScreen extends StatefulWidget {
   const DoctorDiagnosisScreen({super.key});
@@ -18,10 +17,10 @@ class _DoctorDiagnosisScreenState extends State<DoctorDiagnosisScreen> {
     final year = dateTime.year;
 
     final hour = dateTime.hour > 12
-      ? dateTime.hour - 12
-      : dateTime.hour == 0
-          ? 12
-          : dateTime.hour;
+        ? dateTime.hour - 12
+        : dateTime.hour == 0
+            ? 12
+            : dateTime.hour;
 
     final minute = dateTime.minute.toString().padLeft(2, '0');
     final period = dateTime.hour >= 12 ? "PM" : "AM";
@@ -29,7 +28,7 @@ class _DoctorDiagnosisScreenState extends State<DoctorDiagnosisScreen> {
     return "$day/$month/$year, $hour:$minute $period";
   }
 
-  void addDiagnosis() {
+  Future<void> addDiagnosis() async {
     if (diagnosisController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter diagnosis")),
@@ -37,19 +36,17 @@ class _DoctorDiagnosisScreenState extends State<DoctorDiagnosisScreen> {
       return;
     }
 
-    setState(() {
-      DummyData.diagnoses.add(
-        Diagnosis(
-          id: "DG${DummyData.diagnoses.length + 1}",
-          doctorName: DummyData.doctor.name,
-          patientName: DummyData.patient.name,
-          diagnosis: diagnosisController.text.trim(),
-          date: _formatDateTime(DateTime.now()),
-        ),
-      );
+    await FirebaseFirestore.instance.collection('diagnoses').add({
+      'patientName': 'John Doe',
+      'doctorName': 'Dr. Smith',
+      'diagnosis': diagnosisController.text.trim(),
+      'date': _formatDateTime(DateTime.now()),
+      'createdAt': FieldValue.serverTimestamp(),
     });
 
     diagnosisController.clear();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Diagnosis added successfully")),
@@ -57,9 +54,13 @@ class _DoctorDiagnosisScreenState extends State<DoctorDiagnosisScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final diagnoses = DummyData.diagnoses;
+  void dispose() {
+    diagnosisController.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Diagnosis"),
@@ -86,14 +87,42 @@ class _DoctorDiagnosisScreenState extends State<DoctorDiagnosisScreen> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          ...diagnoses.map(
-            (diagnosis) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.medical_information),
-                title: Text(diagnosis.diagnosis),
-                subtitle: Text("${diagnosis.doctorName} • ${diagnosis.date}"),
-              ),
-            ),
+
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('diagnoses')
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Text("Something went wrong");
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final diagnoses = snapshot.data!.docs;
+
+              if (diagnoses.isEmpty) {
+                return const Text("No diagnosis added yet");
+              }
+
+              return Column(
+                children: diagnoses.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+
+                  return Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.medical_information),
+                      title: Text(data['diagnosis'] ?? ''),
+                      subtitle: Text(
+                        "${data['doctorName'] ?? ''} • ${data['date'] ?? ''}",
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
