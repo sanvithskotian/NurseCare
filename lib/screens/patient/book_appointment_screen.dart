@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/appointment.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/dummy_data.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
@@ -13,7 +14,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   final dateController = TextEditingController();
   final timeController = TextEditingController();
 
-  void bookAppointment() {
+  Future<void> bookAppointment() async {
     if (dateController.text.trim().isEmpty ||
         timeController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -22,20 +23,32 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       return;
     }
 
-    setState(() {
-      DummyData.appointments.add(
-        Appointment(
-          id: "A${DummyData.appointments.length + 1}",
-          patientName: DummyData.patient.name,
-          doctorName: DummyData.doctor.name.isEmpty ? "Dr. Smith" : DummyData.doctor.name,
-          date: "${dateController.text.trim()} - ${timeController.text.trim()}",
-          status: "Pending",
-        ),
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please login first")),
       );
+      return;
+    }
+
+    await FirebaseFirestore.instance.collection('appointments').add({
+      'patientId': user.uid,
+      'patientName': DummyData.patient.name,
+      'patientEmail': user.email,
+      'doctorName': DummyData.doctor.name.isEmpty
+          ? "Dr. Smith"
+          : DummyData.doctor.name,
+      'date': dateController.text.trim(),
+      'time': timeController.text.trim(),
+      'status': 'Pending',
+      'createdAt': FieldValue.serverTimestamp(),
     });
 
     dateController.clear();
     timeController.clear();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Appointment booked successfully")),
@@ -51,7 +64,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appointments = DummyData.appointments;
+    final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -88,15 +101,44 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          ...appointments.map(
-            (appointment) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.calendar_month),
-                title: Text(appointment.doctorName),
-                subtitle: Text(appointment.date),
-                trailing: Text(appointment.status),
-              ),
-            ),
+
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('appointments')
+                .where('patientId', isEqualTo: user?.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Text("Something went wrong");
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final appointments = snapshot.data!.docs;
+
+              if (appointments.isEmpty) {
+                return const Text("No appointments booked yet");
+              }
+
+              return Column(
+                children: appointments.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+
+                  return Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.calendar_month),
+                      title: Text(data['doctorName'] ?? 'Doctor'),
+                      subtitle: Text(
+                        "${data['date'] ?? ''} - ${data['time'] ?? ''}",
+                      ),
+                      trailing: Text(data['status'] ?? 'Pending'),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
