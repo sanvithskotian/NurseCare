@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/prescription.dart';
-import '../../services/dummy_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DoctorPrescriptionScreen extends StatefulWidget {
   const DoctorPrescriptionScreen({super.key});
@@ -15,15 +14,7 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
   final dosageController = TextEditingController();
   final durationController = TextEditingController();
 
-  @override
-  void dispose() {
-    medicineController.dispose();
-    dosageController.dispose();
-    durationController.dispose();
-    super.dispose();
-  }
-
-  void addPrescription() {
+  Future<void> addPrescription() async {
     if (medicineController.text.trim().isEmpty ||
         dosageController.text.trim().isEmpty ||
         durationController.text.trim().isEmpty) {
@@ -33,25 +24,32 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
       return;
     }
 
-    setState(() {
-      DummyData.prescriptions.add(
-        Prescription(
-          id: "PR${DummyData.prescriptions.length + 1}",
-          doctorName: DummyData.doctor.name,
-          medicine: medicineController.text.trim(),
-          dosage: dosageController.text.trim(),
-          duration: durationController.text.trim(),
-        ),
-      );
+    await FirebaseFirestore.instance.collection('prescriptions').add({
+      'patientName': 'John Doe',
+      'doctorName': 'Dr. Smith',
+      'medicine': medicineController.text.trim(),
+      'dosage': dosageController.text.trim(),
+      'duration': durationController.text.trim(),
+      'createdAt': FieldValue.serverTimestamp(),
     });
 
     medicineController.clear();
     dosageController.clear();
     durationController.clear();
 
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Prescription added successfully")),
     );
+  }
+
+  @override
+  void dispose() {
+    medicineController.dispose();
+    dosageController.dispose();
+    durationController.dispose();
+    super.dispose();
   }
 
   Widget buildInputField({
@@ -62,16 +60,9 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
       controller: controller,
       keyboardType: TextInputType.text,
       textInputAction: TextInputAction.next,
-      cursorColor: Colors.blue,
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 18,
-      ),
+      cursorColor: Colors.teal,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.black54),
-        filled: true,
-        fillColor: Colors.white,
         border: const OutlineInputBorder(),
       ),
     );
@@ -79,10 +70,7 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prescriptions = DummyData.prescriptions;
-
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Doctor Prescriptions"),
       ),
@@ -114,17 +102,43 @@ class _DoctorPrescriptionScreenState extends State<DoctorPrescriptionScreen> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          ...prescriptions.map(
-            (prescription) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.medication),
-                title: Text(prescription.medicine),
-                subtitle: Text(
-                  "${prescription.dosage}\nDuration: ${prescription.duration}",
-                ),
-                trailing: Text(prescription.doctorName),
-              ),
-            ),
+
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('prescriptions')
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Text("Something went wrong");
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final prescriptions = snapshot.data!.docs;
+
+              if (prescriptions.isEmpty) {
+                return const Text("No prescriptions added yet");
+              }
+
+              return Column(
+                children: prescriptions.map((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+
+                  return Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.medication),
+                      title: Text(data['medicine'] ?? ''),
+                      subtitle: Text(
+                        "${data['dosage'] ?? ''}\nDuration: ${data['duration'] ?? ''}",
+                      ),
+                      trailing: Text(data['doctorName'] ?? ''),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
           ),
         ],
       ),
