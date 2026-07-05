@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/vital.dart';
-import '../../services/dummy_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UpdateVitalsScreen extends StatefulWidget {
   const UpdateVitalsScreen({super.key});
@@ -19,12 +18,12 @@ class _UpdateVitalsScreenState extends State<UpdateVitalsScreen> {
     final day = dateTime.day.toString().padLeft(2, '0');
     final month = dateTime.month.toString().padLeft(2, '0');
     final year = dateTime.year;
-  
+
     final hour = dateTime.hour > 12
-      ? dateTime.hour - 12
-      : dateTime.hour == 0
-          ? 12
-          : dateTime.hour;
+        ? dateTime.hour - 12
+        : dateTime.hour == 0
+            ? 12
+            : dateTime.hour;
 
     final minute = dateTime.minute.toString().padLeft(2, '0');
     final period = dateTime.hour >= 12 ? "PM" : "AM";
@@ -32,7 +31,7 @@ class _UpdateVitalsScreenState extends State<UpdateVitalsScreen> {
     return "$day/$month/$year, $hour:$minute $period";
   }
 
-  void saveVitals() {
+  Future<void> saveVitals() async {
     if (temperatureController.text.trim().isEmpty ||
         bloodPressureController.text.trim().isEmpty ||
         heartRateController.text.trim().isEmpty ||
@@ -43,25 +42,22 @@ class _UpdateVitalsScreenState extends State<UpdateVitalsScreen> {
       return;
     }
 
-    setState(() {
-      DummyData.vitals.insert(
-        0,
-        Vital(
-          id: "V${DummyData.vitals.length + 1}",
-          patientName: DummyData.patient.name,
-          temperature: "${temperatureController.text.trim()} °F",
-          bloodPressure: "${bloodPressureController.text.trim()} mmHg",
-          heartRate: "${heartRateController.text.trim()} BPM",
-          oxygenLevel: "${oxygenLevelController.text.trim()}%",
-          dateTime: _formatDateTime(DateTime.now()),
-        ),
-      );
+    await FirebaseFirestore.instance.collection('vitals').add({
+      'patientName': 'John Doe',
+      'temperature': "${temperatureController.text.trim()} °F",
+      'bloodPressure': "${bloodPressureController.text.trim()} mmHg",
+      'heartRate': "${heartRateController.text.trim()} BPM",
+      'oxygenLevel': "${oxygenLevelController.text.trim()}%",
+      'dateTime': _formatDateTime(DateTime.now()),
+      'createdAt': FieldValue.serverTimestamp(),
     });
 
     temperatureController.clear();
     bloodPressureController.clear();
     heartRateController.clear();
     oxygenLevelController.clear();
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Vitals updated successfully")),
@@ -96,11 +92,11 @@ class _UpdateVitalsScreenState extends State<UpdateVitalsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _inputField("Temperature, e.g. 98.6 ", temperatureController),
+          _inputField("Temperature, e.g. 98.6", temperatureController),
           const SizedBox(height: 12),
           _inputField("Blood Pressure, e.g. 120/80", bloodPressureController),
           const SizedBox(height: 12),
-          _inputField("Heart Rate, e.g. 78 ", heartRateController),
+          _inputField("Heart Rate, e.g. 78", heartRateController),
           const SizedBox(height: 12),
           _inputField("Oxygen Level, e.g. 98", oxygenLevelController),
           const SizedBox(height: 16),
