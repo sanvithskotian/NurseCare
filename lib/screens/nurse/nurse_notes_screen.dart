@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/nursing_note.dart';
-import '../../services/dummy_data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NurseNotesScreen extends StatefulWidget {
   const NurseNotesScreen({super.key});
@@ -29,41 +28,39 @@ class _NurseNotesScreenState extends State<NurseNotesScreen> {
     return "$day/$month/$year, $hour:$minute $period";
   }
 
-  void addNote() {
-    if (noteController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please enter a note"),
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      DummyData.nursingNotes.add(
-        NursingNote(
-          id: "NN${DummyData.nursingNotes.length + 1}",
-          nurseName: DummyData.nurse.name,
-          patientName: DummyData.patient.name,
-          note: noteController.text.trim(),
-          date: _formatDateTime(DateTime.now()),
-        ),
-      );
-    });
-
-    noteController.clear();
-
+  Future<void> addNote() async {
+  if (noteController.text.trim().isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text("Note added successfully"),
+        content: Text("Please enter a note"),
       ),
     );
+    return;
   }
+
+  await FirebaseFirestore.instance
+      .collection('nursing_notes')
+      .add({
+    'patientName': 'John Doe',
+    'nurseName': 'Mary Johnson',
+    'note': noteController.text.trim(),
+    'date': _formatDateTime(DateTime.now()),
+    'createdAt': FieldValue.serverTimestamp(),
+  });
+
+  noteController.clear();
+
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Note added successfully"),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
-    final notes = DummyData.nursingNotes;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Nurse Notes"),
@@ -93,17 +90,47 @@ class _NurseNotesScreenState extends State<NurseNotesScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          ...notes.map(
-            (note) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.note),
-                title: Text(note.note),
-                subtitle: Text(
-                  "${note.nurseName} • ${note.date}",
-                ),
-              ),
+         StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('nursing_notes')
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (snapshot.hasError) {
+      return const Text("Something went wrong");
+    }
+
+    if (snapshot.connectionState ==
+        ConnectionState.waiting) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    final notes = snapshot.data!.docs;
+
+    if (notes.isEmpty) {
+      return const Text("No notes added yet");
+    }
+
+    return Column(
+      children: notes.map((doc) {
+        final data =
+            doc.data() as Map<String, dynamic>;
+
+        return Card(
+          child: ListTile(
+            leading: const Icon(Icons.note),
+            title: Text(data['note'] ?? ''),
+            subtitle: Text(
+              "${data['nurseName'] ?? ''} • "
+              "${data['date'] ?? ''}",
             ),
           ),
+        );
+      }).toList(),
+    );
+  },
+),
         ],
       ),
     );
