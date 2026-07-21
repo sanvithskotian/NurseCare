@@ -10,16 +10,18 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   bool isLoading = false;
 
   Future<void> registerPatient() async {
-    if (emailController.text.trim().isEmpty ||
+    if (nameController.text.trim().isEmpty ||
+      emailController.text.trim().isEmpty ||
         passwordController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter email and password")),
+        const SnackBar(content: Text("Please enter all fields")),
       );
       return;
     }
@@ -40,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           .doc(userCredential.user!.uid)
           .set({
         'email': emailController.text.trim(),
-        'name': 'Patient',
+        'name':  nameController.text.trim(),
         'role': 'patient',
       });
 
@@ -76,6 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -99,6 +102,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
+            TextField(
+  controller: nameController,
+  decoration: const InputDecoration(
+    labelText: "Full Name",
+    prefixIcon: Icon(Icons.person),
+    border: OutlineInputBorder(),
+  ),
+),
+const SizedBox(height: 20),
             TextField(
               controller: emailController,
               decoration: const InputDecoration(

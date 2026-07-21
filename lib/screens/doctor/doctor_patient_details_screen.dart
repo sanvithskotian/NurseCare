@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../services/dummy_data.dart';
 import 'doctor_prescription_screen.dart';
 import 'doctor_diagnosis_screen.dart';
 import '../nurse/vitals_screen.dart';
 
 class DoctorPatientDetailsScreen extends StatelessWidget {
-  const DoctorPatientDetailsScreen({super.key});
+  final String patientId;
+  final String patientName;
+
+  const DoctorPatientDetailsScreen({
+    super.key,
+    required this.patientId,
+    required this.patientName,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final patient = DummyData.patient;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Patient Details"),
@@ -23,9 +27,9 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
               leading: const CircleAvatar(
                 child: Icon(Icons.person),
               ),
-              title: Text(patient.name),
+              title: Text(patientName),
               subtitle: Text(
-                "ID: ${patient.id}\nAge: ${patient.age}\nBlood Group: ${patient.bloodGroup}",
+                "Patient ID: $patientId",
               ),
             ),
           ),
@@ -34,19 +38,28 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
             context,
             "Add Diagnosis",
             Icons.medical_information,
-            const DoctorDiagnosisScreen(),
+            DoctorDiagnosisScreen(
+              patientId: patientId,
+              patientName: patientName,
+            ),
           ),
           _actionCard(
             context,
             "Add Prescription",
             Icons.medication,
-            const DoctorPrescriptionScreen(),
+            DoctorPrescriptionScreen(
+              patientId: patientId,
+              patientName: patientName,
+            ),
           ),
           _actionCard(
             context,
             "View Vitals History",
             Icons.monitor_heart,
-            const VitalsScreen(),
+            VitalsScreen(
+              patientId: patientId,
+              patientName: patientName,
+            ),
           ),
         ],
       ),
@@ -61,7 +74,10 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
   ) {
     return Card(
       child: ListTile(
-        leading: Icon(icon, color: Colors.teal),
+        leading: Icon(
+          icon,
+          color: Colors.teal,
+        ),
         title: Text(title),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: screen == null
@@ -69,7 +85,9 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
             : () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => screen),
+                  MaterialPageRoute(
+                    builder: (_) => screen,
+                  ),
                 );
               },
       ),

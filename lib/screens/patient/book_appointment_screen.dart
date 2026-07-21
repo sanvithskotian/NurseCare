@@ -31,10 +31,15 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       );
       return;
     }
+    final userDoc = await FirebaseFirestore.instance
+    .collection('users')
+    .doc(user.uid)
+    .get();
 
+final patientName = userDoc.data()?['name'] ?? 'Unknown Patient';
     await FirebaseFirestore.instance.collection('appointments').add({
       'patientId': user.uid,
-      'patientName': DummyData.patient.name,
+      'patientName': patientName,
       'patientEmail': user.email,
       'doctorName': DummyData.doctor.name.isEmpty
           ? "Dr. Smith"

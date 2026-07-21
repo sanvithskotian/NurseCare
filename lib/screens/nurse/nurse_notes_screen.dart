@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class NurseNotesScreen extends StatefulWidget {
   const NurseNotesScreen({super.key});
@@ -38,11 +39,30 @@ class _NurseNotesScreenState extends State<NurseNotesScreen> {
     return;
   }
 
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Nurse is not logged in"),
+      ),
+    );
+    return;
+  }
+
+  final nurseDocument = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .get();
+
+  final nurseName =
+      nurseDocument.data()?['name']?.toString() ?? 'Unknown Nurse';
+
   await FirebaseFirestore.instance
       .collection('nursing_notes')
       .add({
     'patientName': 'John Doe',
-    'nurseName': 'Mary Johnson',
+    'nurseName': nurseName,
     'note': noteController.text.trim(),
     'date': _formatDateTime(DateTime.now()),
     'createdAt': FieldValue.serverTimestamp(),

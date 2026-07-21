@@ -2,18 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class VitalsScreen extends StatelessWidget {
-  const VitalsScreen({super.key});
+  final String patientId;
+  final String patientName;
+
+  const VitalsScreen({
+    super.key,
+    required this.patientId,
+    required this.patientName,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Vitals History"),
+        title: Text("$patientName - Vitals"),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('vitals')
-            .orderBy('createdAt', descending: true)
+            .where(
+              'patientId',
+              isEqualTo: patientId,
+            )
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
@@ -29,11 +39,31 @@ class VitalsScreen extends StatelessWidget {
             );
           }
 
-          final vitals = snapshot.data!.docs;
+          final vitals = snapshot.data?.docs ?? [];
+
+          vitals.sort((first, second) {
+            final firstData =
+                first.data() as Map<String, dynamic>;
+            final secondData =
+                second.data() as Map<String, dynamic>;
+
+            final firstTime =
+                firstData['createdAt'] as Timestamp?;
+            final secondTime =
+                secondData['createdAt'] as Timestamp?;
+
+            if (firstTime == null || secondTime == null) {
+              return 0;
+            }
+
+            return secondTime.compareTo(firstTime);
+          });
 
           if (vitals.isEmpty) {
-            return const Center(
-              child: Text("No vitals recorded yet"),
+            return Center(
+              child: Text(
+                "No vitals recorded for $patientName",
+              ),
             );
           }
 
@@ -52,13 +82,14 @@ class VitalsScreen extends StatelessWidget {
                     color: Colors.teal,
                   ),
                   title: Text(
-                    data['dateTime'] ?? '',
+                    data['dateTime']?.toString() ?? '',
                   ),
                   subtitle: Text(
-                    "Temp: ${data['temperature'] ?? ''}\n"
-                    "BP: ${data['bloodPressure'] ?? ''}\n"
-                    "Heart Rate: ${data['heartRate'] ?? ''}\n"
-                    "Oxygen: ${data['oxygenLevel'] ?? ''}",
+                    "Temp: ${data['temperature']?.toString() ?? ''}\n"
+                    "BP: ${data['bloodPressure']?.toString() ?? ''}\n"
+                    "Heart Rate: ${data['heartRate']?.toString() ?? ''}\n"
+                    "Oxygen: ${data['oxygenLevel']?.toString() ?? ''}\n"
+                    "Updated by: ${data['nurseName']?.toString() ?? 'Unknown Nurse'}",
                   ),
                 ),
               );
