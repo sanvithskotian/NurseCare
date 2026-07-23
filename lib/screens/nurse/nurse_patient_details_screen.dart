@@ -34,19 +34,28 @@ class NursePatientDetailsScreen extends StatelessWidget {
             context,
             "Update Vitals",
             Icons.favorite,
-            const UpdateVitalsScreen(),
+            UpdateVitalsScreen(
+              patientId: patient.id,
+              patientName: patient.name
+            ),
           ),
           _actionCard(
             context,
             "Vitals History",
             Icons.monitor_heart,
-            const VitalsScreen(),
+            VitalsScreen(
+              patientId: patient.id,
+              patientName: patient.name
+            ),
           ),
           _actionCard(
             context,
             "Add Nursing Notes",
             Icons.note,
-            const NurseNotesScreen(),
+            const NurseNotesScreen(
+              patientId: 'patient_id', 
+              patientName: 'patient_name', 
+            ),
           ),
         ],
       ),
