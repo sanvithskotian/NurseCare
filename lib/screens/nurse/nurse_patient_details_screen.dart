@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import '../../services/dummy_data.dart';
 import 'nurse_notes_screen.dart';
 import 'vitals_screen.dart';
 import 'update_vitals_screen.dart';
 
 class NursePatientDetailsScreen extends StatelessWidget {
-  const NursePatientDetailsScreen({super.key});
+  final String patientId;
+  final String patientName;
+
+  const NursePatientDetailsScreen({
+    super.key,
+    required this.patientId,
+    required this.patientName,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final patient = DummyData.patient;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Patient Care Details"),
@@ -23,9 +27,9 @@ class NursePatientDetailsScreen extends StatelessWidget {
               leading: const CircleAvatar(
                 child: Icon(Icons.person),
               ),
-              title: Text(patient.name),
+              title: Text(patientName),
               subtitle: Text(
-                "ID: ${patient.id}\nAge: ${patient.age}\nBlood Group: ${patient.bloodGroup}",
+                "Patient ID: $patientId",
               ),
             ),
           ),
@@ -35,8 +39,8 @@ class NursePatientDetailsScreen extends StatelessWidget {
             "Update Vitals",
             Icons.favorite,
             UpdateVitalsScreen(
-              patientId: patient.id,
-              patientName: patient.name
+              patientId: patientId,
+              patientName: patientName,
             ),
           ),
           _actionCard(
@@ -44,17 +48,17 @@ class NursePatientDetailsScreen extends StatelessWidget {
             "Vitals History",
             Icons.monitor_heart,
             VitalsScreen(
-              patientId: patient.id,
-              patientName: patient.name
+              patientId: patientId,
+              patientName: patientName,
             ),
           ),
           _actionCard(
             context,
             "Add Nursing Notes",
             Icons.note,
-            const NurseNotesScreen(
-              patientId: 'patient_id', 
-              patientName: 'patient_name', 
+            NurseNotesScreen(
+              patientId: patientId,
+              patientName: patientName,
             ),
           ),
         ],
@@ -70,13 +74,20 @@ class NursePatientDetailsScreen extends StatelessWidget {
   ) {
     return Card(
       child: ListTile(
-        leading: Icon(icon, color: Colors.teal),
+        leading: Icon(
+          icon,
+          color: Colors.teal,
+        ),
         title: Text(title),
-        trailing: const Icon(Icons.arrow_forward_ios),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+        ),
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => screen),
+            MaterialPageRoute(
+              builder: (_) => screen,
+            ),
           );
         },
       ),

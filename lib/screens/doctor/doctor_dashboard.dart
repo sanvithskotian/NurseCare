@@ -40,13 +40,62 @@ class DoctorDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text("Doctor Dashboard"),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => _logout(context),
+            onPressed: () async {
+  final shouldLogout = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Logout"),
+      content: const Text(
+        "Are you sure you want to logout?",
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context, false);
+          },
+          child: const Text("Cancel"),
+        ),
+        FilledButton(
+
+    style: FilledButton.styleFrom(
+
+      backgroundColor: Colors.red,
+
+      foregroundColor: Colors.white,
+
+    ),
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+          child: const Text("Logout"),
+        ),
+      ],
+    ),
+  );
+
+  if (shouldLogout != true) return;
+
+  await FirebaseAuth.instance.signOut();
+
+  if (!context.mounted) return;
+
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(
+      builder: (_) => const RoleSelectionScreen(),
+    ),
+    (route) => false,
+  );
+},
           ),
         ],
       ),
@@ -132,6 +181,7 @@ class DoctorDashboard extends StatelessWidget {
             ],
           );
         },
+      ),
       ),
     );
   }

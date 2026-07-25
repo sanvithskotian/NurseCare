@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'register_screen.dart';
 import '../patient/patient_dashboard.dart';
 import '../nurse/nurse_dashboard.dart';
 import '../doctor/doctor_dashboard.dart';
 import '../management/management_dashboard.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginScreen extends StatefulWidget {
   final String role;
@@ -34,10 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> loginUser() async {
-    if (emailController.text.trim().isEmpty ||
-        passwordController.text.trim().isEmpty) {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter email and password")),
+        const SnackBar(
+          content: Text("Please enter email and password"),
+        ),
       );
       return;
     }
@@ -47,74 +52,165 @@ class _LoginScreenState extends State<LoginScreen> {
         isLoading = true;
       });
 
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+      final credential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
+
+      final user = credential.user;
+
+      if (user == null) {
+        throw Exception("Login failed. User account was not found.");
+      }
+
+      final userDocument = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDocument.exists) {
+        await FirebaseAuth.instance.signOut();
+
+        throw Exception(
+          "User profile not found in Firestore.",
+        );
+      }
+
+      final userData = userDocument.data();
+
+      if (userData == null || userData['role'] == null) {
+        await FirebaseAuth.instance.signOut();
+
+        throw Exception(
+          "User role not found in Firestore.",
+        );
+      }
+
+      final databaseRole =
+          userData['role'].toString().trim().toLowerCase();
+
+      final selectedPortalRole =
+          widget.role.trim().toLowerCase();
+
+      if (databaseRole != selectedPortalRole) {
+        await FirebaseAuth.instance.signOut();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Access denied. This account belongs to the "
+              "$databaseRole portal.",
+            ),
+          ),
+        );
+
+        return;
+      }
 
       if (!mounted) return;
 
-      final email = FirebaseAuth.instance.currentUser!.email!;
+      switch (databaseRole) {
+        case 'patient':
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const PatientDashboard(),
+            ),
+          );
+          break;
 
-final query = await FirebaseFirestore.instance
-    .collection('users')
-    .where('email', isEqualTo: email)
-    .get();
+        case 'doctor':
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const DoctorDashboard(),
+            ),
+          );
+          break;
 
-if (query.docs.isEmpty) {
-  throw Exception("User role not found");
-}
+        case 'nurse':
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const NurseDashboard(),
+            ),
+          );
+          break;
 
-final role = query.docs.first['role'];
+        case 'management':
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ManagementDashboard(),
+            ),
+          );
+          break;
 
-if (role == "patient" && widget.role == "Patient") {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const PatientDashboard(),
-    ),
-  );
-} else if (role == "doctor" && widget.role == "Doctor") {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const DoctorDashboard(),
-    ),
-  );
-} else if (role == "nurse" && widget.role == "Nurse") {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const NurseDashboard(),
-    ),
-  );
-} else if (role == "management" &&
-    widget.role == "Management") {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const ManagementDashboard(),
-    ),
-  );
-} else {
-  await FirebaseAuth.instance.signOut();
+        default:
+          await FirebaseAuth.instance.signOut();
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text(
-        "Access denied for this portal",
-      ),
-    ),
-  );
-}
-     } on FirebaseAuthException catch (e) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text("Error: ${e.code}"),
-    ),
-  );
-}
-     finally {
+          if (!mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Invalid user role"),
+            ),
+          );
+      }
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) return;
+
+      String message;
+
+      switch (error.code) {
+        case 'invalid-email':
+          message = "Please enter a valid email address.";
+          break;
+
+        case 'user-not-found':
+        case 'invalid-credential':
+          message = "Incorrect email or password.";
+          break;
+
+        case 'wrong-password':
+          message = "Incorrect email or password.";
+          break;
+
+        case 'user-disabled':
+          message = "This account has been disabled.";
+          break;
+
+        case 'too-many-requests':
+          message = "Too many attempts. Please try again later.";
+          break;
+
+        case 'network-request-failed':
+          message = "Please check your internet connection.";
+          break;
+
+        default:
+          message = "Login failed: ${error.message ?? error.code}";
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -167,6 +263,7 @@ if (role == "patient" && widget.role == "Patient") {
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
               decoration: const InputDecoration(
                 labelText: 'Email',
                 prefixIcon: Icon(Icons.email),
@@ -179,6 +276,12 @@ if (role == "patient" && widget.role == "Patient") {
             TextField(
               controller: passwordController,
               obscureText: isPasswordHidden,
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) {
+                if (!isLoading) {
+                  loginUser();
+                }
+              },
               decoration: InputDecoration(
                 labelText: 'Password',
                 prefixIcon: const Icon(Icons.lock),
@@ -216,7 +319,14 @@ if (role == "patient" && widget.role == "Patient") {
               child: ElevatedButton(
                 onPressed: isLoading ? null : loginUser,
                 child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
                     : const Text(
                         'Login',
                         style: TextStyle(fontSize: 18),
@@ -237,7 +347,7 @@ if (role == "patient" && widget.role == "Patient") {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const RegisterScreen(),
-                          ),
+                        ),
                       );
                     },
                     child: const Text('Sign Up'),
