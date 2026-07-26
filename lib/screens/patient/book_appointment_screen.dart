@@ -17,6 +17,7 @@ class _BookAppointmentScreenState
 
   String? selectedDoctorId;
   String? selectedDoctorName;
+  String? selectedDoctorSpecialization;
 
   Future<void> bookAppointment() async {
     if (selectedDoctorId == null) {
@@ -66,6 +67,7 @@ class _BookAppointmentScreenState
 
       'doctorId': selectedDoctorId,
       'doctorName': selectedDoctorName,
+      'doctorSpecialization': selectedDoctorSpecialization,
 
       'date': dateController.text.trim(),
       'time': timeController.text.trim(),
@@ -80,6 +82,7 @@ class _BookAppointmentScreenState
     setState(() {
       selectedDoctorId = null;
       selectedDoctorName = null;
+      selectedDoctorSpecialization = null;
     });
 
     if (!mounted) return;
@@ -133,6 +136,8 @@ class _BookAppointmentScreenState
 
               return DropdownButtonFormField<String>(
                 value: selectedDoctorId,
+                isExpanded: true,
+                itemHeight: 60,
                 decoration: const InputDecoration(
                   labelText: "Select Doctor",
                   border: OutlineInputBorder(),
@@ -142,12 +147,40 @@ class _BookAppointmentScreenState
                       doc.data() as Map<String, dynamic>;
 
                   return DropdownMenuItem<String>(
-                    value: doc.id,
-                    child: Text(
-                      doctor['name'] ?? 'Doctor',
-                    ),
-                  );
+  value: doc.id,
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Text(
+        doctor['name'] ?? 'Doctor',
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      Text(
+        doctor['specialization'] ?? 'General',
+        style: TextStyle(
+          fontSize: 12,
+          color: Colors.grey[600],
+        ),
+      ),
+    ],
+  ),
+);
                 }).toList(),
+                selectedItemBuilder: (context) {
+  return snapshot.data!.docs.map((doc) {
+    final doctor = doc.data() as Map<String, dynamic>;
+
+    return Text(
+      doctor['name'] ?? 'Doctor',
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }).toList();
+},
                 onChanged: (value) {
                   setState(() {
                     selectedDoctorId = value;
@@ -158,9 +191,12 @@ class _BookAppointmentScreenState
                           (doc) => doc.id == value,
                         );
 
-                    selectedDoctorName =
-                        (selectedDoctor.data()
-                            as Map<String, dynamic>)['name'];
+                    final doctorData =
+    selectedDoctor.data() as Map<String, dynamic>;
+
+selectedDoctorName = doctorData['name'];
+selectedDoctorSpecialization =
+    doctorData['specialization'];
                   });
                 },
               );
