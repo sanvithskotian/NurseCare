@@ -21,81 +21,178 @@ class MedicalHistoryScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Medical History"),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            "Doctor Diagnoses",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
+      body: StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('diagnoses')
+      .where(
+        'patientId',
+        isEqualTo: user.uid,
+      )
+      .snapshots(),
+  builder: (context, diagnosisSnapshot) {
+    if (diagnosisSnapshot.hasError) {
+      return const Center(
+        child: Text("Could not load medical history"),
+      );
+    }
 
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('diagnoses')
-                .where(
-                  'patientId',
-                  isEqualTo: user.uid,
-                )
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return const Text(
-                  "Could not load diagnoses",
-                );
-              }
+    if (diagnosisSnapshot.connectionState ==
+        ConnectionState.waiting) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
 
-              if (snapshot.connectionState ==
-                  ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('nursing_notes')
+          .where(
+            'patientId',
+            isEqualTo: user.uid,
+          )
+          .snapshots(),
+      builder: (context, notesSnapshot) {
+        if (notesSnapshot.hasError) {
+          return const Center(
+            child: Text("Could not load medical history"),
+          );
+        }
 
-              final diagnoses = snapshot.data?.docs ?? [];
+        if (notesSnapshot.connectionState ==
+            ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-              diagnoses.sort((first, second) {
-                final firstData =
-                    first.data() as Map<String, dynamic>;
-                final secondData =
-                    second.data() as Map<String, dynamic>;
+        final diagnoses =
+            diagnosisSnapshot.data?.docs ?? [];
 
-                final firstTime =
-                    firstData['createdAt'] as Timestamp?;
-                final secondTime =
-                    secondData['createdAt'] as Timestamp?;
+        final notes =
+            notesSnapshot.data?.docs ?? [];
 
-                if (firstTime == null && secondTime == null) {
-                  return 0;
-                }
+        diagnoses.sort((first, second) {
+          final firstData =
+              first.data() as Map<String, dynamic>;
 
-                if (firstTime == null) {
-                  return 1;
-                }
+          final secondData =
+              second.data() as Map<String, dynamic>;
 
-                if (secondTime == null) {
-                  return -1;
-                }
+          final firstTime =
+              firstData['createdAt'] as Timestamp?;
 
-                return secondTime.compareTo(firstTime);
-              });
+          final secondTime =
+              secondData['createdAt'] as Timestamp?;
 
-              if (diagnoses.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.medical_information),
-                    title: Text("No diagnoses available"),
+          if (firstTime == null && secondTime == null) {
+            return 0;
+          }
+
+          if (firstTime == null) {
+            return 1;
+          }
+
+          if (secondTime == null) {
+            return -1;
+          }
+
+          return secondTime.compareTo(firstTime);
+        });
+
+        notes.sort((first, second) {
+          final firstData =
+              first.data() as Map<String, dynamic>;
+
+          final secondData =
+              second.data() as Map<String, dynamic>;
+
+          final firstTime =
+              firstData['createdAt'] as Timestamp?;
+
+          final secondTime =
+              secondData['createdAt'] as Timestamp?;
+
+          if (firstTime == null && secondTime == null) {
+            return 0;
+          }
+
+          if (firstTime == null) {
+            return 1;
+          }
+
+          if (secondTime == null) {
+            return -1;
+          }
+
+          return secondTime.compareTo(firstTime);
+        });
+
+        if (diagnoses.isEmpty && notes.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.description_outlined,
+                    size: 80,
+                    color: Colors.grey,
                   ),
-                );
-              }
+                  SizedBox(height: 20),
+                  Text(
+                    "No Medical History Yet",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Your diagnoses and nursing notes will appear here after your hospital visit.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
-              return Column(
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const Text(
+              "Doctor Diagnoses",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            if (diagnoses.isEmpty)
+              const Card(
+                child: ListTile(
+                  leading: Icon(
+                    Icons.medical_information,
+                  ),
+                  title: Text(
+                    "No diagnoses available",
+                  ),
+                ),
+              )
+            else
+              Column(
                 children: diagnoses.map((document) {
                   final data =
-                      document.data() as Map<String, dynamic>;
+                      document.data()
+                          as Map<String, dynamic>;
 
                   final diagnosis =
                       data['diagnosis']?.toString() ??
@@ -105,10 +202,13 @@ class MedicalHistoryScreen extends StatelessWidget {
                       data['doctorName']?.toString() ??
                           'Doctor';
 
-                  final displayDate = getDisplayDate(data);
+                  final displayDate =
+                      getDisplayDate(data);
 
                   return Card(
-                    margin: const EdgeInsets.only(bottom: 10),
+                    margin: const EdgeInsets.only(
+                      bottom: 10,
+                    ),
                     child: ListTile(
                       leading: const Icon(
                         Icons.medical_information,
@@ -120,199 +220,35 @@ class MedicalHistoryScreen extends StatelessWidget {
                     ),
                   );
                 }).toList(),
-              );
-            },
-          ),
+              ),
 
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          const Text(
-            "Vitals History",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            const Text(
+              "Nursing Notes",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
 
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('vitals')
-                .where(
-                  'patientId',
-                  isEqualTo: user.uid,
-                )
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return const Text(
-                  "Could not load vitals",
-                );
-              }
+            const SizedBox(height: 10),
 
-              if (snapshot.connectionState ==
-                  ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-
-              final vitals = snapshot.data?.docs ?? [];
-
-              vitals.sort((first, second) {
-                final firstData =
-                    first.data() as Map<String, dynamic>;
-                final secondData =
-                    second.data() as Map<String, dynamic>;
-
-                final firstTime =
-                    firstData['createdAt'] as Timestamp?;
-                final secondTime =
-                    secondData['createdAt'] as Timestamp?;
-
-                if (firstTime == null && secondTime == null) {
-                  return 0;
-                }
-
-                if (firstTime == null) {
-                  return 1;
-                }
-
-                if (secondTime == null) {
-                  return -1;
-                }
-
-                return secondTime.compareTo(firstTime);
-              });
-
-              if (vitals.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.monitor_heart),
-                    title: Text("No vitals available"),
+            if (notes.isEmpty)
+              const Card(
+                child: ListTile(
+                  leading: Icon(Icons.note),
+                  title: Text(
+                    "No nursing notes available",
                   ),
-                );
-              }
-
-              return Column(
-                children: vitals.map((document) {
-                  final data =
-                      document.data() as Map<String, dynamic>;
-
-                  final temperature =
-                      data['temperature']?.toString() ?? 'N/A';
-
-                  final bloodPressure =
-                      data['bloodPressure']?.toString() ??
-                          'N/A';
-
-                  final heartRate =
-                      data['heartRate']?.toString() ?? 'N/A';
-
-                  final oxygenLevel =
-                      data['oxygenLevel']?.toString() ??
-                          'N/A';
-
-                  final nurseName =
-                      data['nurseName']?.toString() ??
-                          'Nurse';
-
-                  final displayDate = getDisplayDate(data);
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: ListTile(
-                      leading: const Icon(Icons.monitor_heart),
-                      title: Text(
-                        "Temperature: $temperature °F",
-                      ),
-                      subtitle: Text(
-                        "Blood Pressure: $bloodPressure\n"
-                        "Heart Rate: $heartRate bpm\n"
-                        "Oxygen: $oxygenLevel%\n"
-                        "$nurseName • $displayDate",
-                      ),
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            "Nursing Notes",
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('nursing_notes')
-                .where(
-                  'patientId',
-                  isEqualTo: user.uid,
-                )
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return const Text(
-                  "Could not load nursing notes",
-                );
-              }
-
-              if (snapshot.connectionState ==
-                  ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-
-              final notes = snapshot.data?.docs ?? [];
-
-              notes.sort((first, second) {
-                final firstData =
-                    first.data() as Map<String, dynamic>;
-                final secondData =
-                    second.data() as Map<String, dynamic>;
-
-                final firstTime =
-                    firstData['createdAt'] as Timestamp?;
-                final secondTime =
-                    secondData['createdAt'] as Timestamp?;
-
-                if (firstTime == null && secondTime == null) {
-                  return 0;
-                }
-
-                if (firstTime == null) {
-                  return 1;
-                }
-
-                if (secondTime == null) {
-                  return -1;
-                }
-
-                return secondTime.compareTo(firstTime);
-              });
-
-              if (notes.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.note),
-                    title: Text("No nursing notes available"),
-                  ),
-                );
-              }
-
-              return Column(
+                ),
+              )
+            else
+              Column(
                 children: notes.map((document) {
                   final data =
-                      document.data() as Map<String, dynamic>;
+                      document.data()
+                          as Map<String, dynamic>;
 
                   final note =
                       data['note']?.toString() ??
@@ -322,10 +258,13 @@ class MedicalHistoryScreen extends StatelessWidget {
                       data['nurseName']?.toString() ??
                           'Nurse';
 
-                  final displayDate = getDisplayDate(data);
+                  final displayDate =
+                      getDisplayDate(data);
 
                   return Card(
-                    margin: const EdgeInsets.only(bottom: 10),
+                    margin: const EdgeInsets.only(
+                      bottom: 10,
+                    ),
                     child: ListTile(
                       leading: const Icon(Icons.note),
                       title: Text(note),
@@ -335,11 +274,13 @@ class MedicalHistoryScreen extends StatelessWidget {
                     ),
                   );
                 }).toList(),
-              );
-            },
-          ),
-        ],
-      ),
+              ),
+          ],
+        );
+      },
+    );
+  },
+),
     );
   }
 
@@ -356,8 +297,12 @@ class MedicalHistoryScreen extends StatelessWidget {
     if (createdAt is Timestamp) {
       final dateTime = createdAt.toDate();
 
-      final day = dateTime.day.toString().padLeft(2, '0');
-      final month = dateTime.month.toString().padLeft(2, '0');
+      final day =
+          dateTime.day.toString().padLeft(2, '0');
+
+      final month =
+          dateTime.month.toString().padLeft(2, '0');
+
       final year = dateTime.year;
 
       final hour = dateTime.hour > 12
