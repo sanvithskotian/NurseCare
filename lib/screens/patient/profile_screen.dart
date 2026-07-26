@@ -19,7 +19,7 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Profile"),
+        title: const Text("Profile"),
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance
@@ -49,10 +49,25 @@ class ProfileScreen extends StatelessWidget {
           final data =
               snapshot.data!.data() as Map<String, dynamic>;
 
+          final String role =
+              (data['role'] ?? '').toString();
+
+          final String formattedRole =
+              role.isNotEmpty
+                  ? role[0].toUpperCase() +
+                      role.substring(1)
+                  : '';
+
+          final String initial =
+              (data['name'] ?? 'U')
+                  .toString()
+                  .substring(0, 1)
+                  .toUpperCase();
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Card(
-              elevation: 4,
+              elevation: 6,
               shape: RoundedRectangleBorder(
                 borderRadius:
                     BorderRadius.circular(16),
@@ -61,11 +76,14 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 50,
-                      child: Icon(
-                        Icons.person,
-                        size: 50,
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
 
@@ -80,14 +98,6 @@ class ProfileScreen extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 25),
-
-                    ListTile(
-                      leading: const Icon(Icons.badge),
-                      title: const Text("User ID"),
-                      subtitle: Text(user.uid),
-                    ),
-
-                    const Divider(),
 
                     ListTile(
                       leading: const Icon(Icons.person),
@@ -110,20 +120,22 @@ class ProfileScreen extends StatelessWidget {
                     const Divider(),
 
                     ListTile(
-                      leading:
-                          const Icon(Icons.admin_panel_settings),
-                      title: const Text("Role"),
-                      subtitle: Text(
-                        data['role'] ?? '',
+                      leading: const Icon(
+                        Icons.admin_panel_settings,
                       ),
+                      title: const Text("Role"),
+                      subtitle: Text(formattedRole),
                     ),
 
                     if (data.containsKey('specialization')) ...[
                       const Divider(),
                       ListTile(
-                        leading: const Icon(Icons.local_hospital),
-                        title:
-                            const Text("Specialization"),
+                        leading: const Icon(
+                          Icons.local_hospital,
+                        ),
+                        title: const Text(
+                          "Specialization",
+                        ),
                         subtitle: Text(
                           data['specialization'],
                         ),
@@ -133,9 +145,12 @@ class ProfileScreen extends StatelessWidget {
                     if (data.containsKey('department')) ...[
                       const Divider(),
                       ListTile(
-                        leading: const Icon(Icons.apartment),
-                        title:
-                            const Text("Department"),
+                        leading: const Icon(
+                          Icons.apartment,
+                        ),
+                        title: const Text(
+                          "Department",
+                        ),
                         subtitle: Text(
                           data['department'],
                         ),
