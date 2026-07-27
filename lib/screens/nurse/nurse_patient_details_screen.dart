@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'nurse_notes_screen.dart';
 import 'vitals_screen.dart';
 import 'update_vitals_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NursePatientDetailsScreen extends StatelessWidget {
   final String patientId;
@@ -22,17 +23,144 @@ class NursePatientDetailsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            child: ListTile(
+          StreamBuilder<DocumentSnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('users')
+      .doc(patientId)
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) {
+      return const Card(
+        child: ListTile(
+          leading: CircleAvatar(
+            child: Icon(Icons.person),
+          ),
+          title: Text("Loading..."),
+        ),
+      );
+    }
+
+    final patient =
+        snapshot.data!.data() as Map<String, dynamic>;
+
+    final doctorName =
+        patient['assignedDoctorName']?.toString();
+
+    final nurseNames = List<String>.from(
+      patient['assignedNurseNames'] ?? [],
+    );
+
+    return Card(
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
               leading: const CircleAvatar(
-                child: Icon(Icons.person),
+                backgroundColor: Colors.teal,
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                ),
               ),
-              title: Text(patientName),
+              title: Text(
+                patientName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
               subtitle: Text(
                 "Patient ID: $patientId",
               ),
             ),
-          ),
+
+            const Divider(),
+
+            const Text(
+              "Assigned Medical Team",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.medical_services,
+                  color: Colors.blue,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    doctorName == null ||
+                            doctorName.isEmpty
+                        ? "Doctor: Not Assigned"
+                        : "Doctor: $doctorName",
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.local_hospital,
+                  color: Colors.teal,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: nurseNames.isEmpty
+                      ? const Text(
+                          "Nurses: Not Assigned",
+                        )
+                      : Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Nurses:",
+                              style: TextStyle(
+                                fontWeight:
+                                    FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            ...nurseNames.map(
+                              (nurse) => Padding(
+                                padding:
+                                    const EdgeInsets.only(
+                                  bottom: 2,
+                                ),
+                                child: Text(
+                                  "• $nurse",
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  },
+),
           const SizedBox(height: 20),
           _actionCard(
             context,
