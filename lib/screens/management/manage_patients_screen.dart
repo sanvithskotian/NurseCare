@@ -1,8 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ManagePatientsScreen extends StatelessWidget {
+class ManagePatientsScreen extends StatefulWidget {
   const ManagePatientsScreen({super.key});
+
+  @override
+  State<ManagePatientsScreen> createState() =>
+      _ManagePatientsScreenState();
+}
+
+class _ManagePatientsScreenState
+    extends State<ManagePatientsScreen> {
+      final TextEditingController _searchController =
+    TextEditingController();
+
+String _searchQuery = '';
+
+@override
+void dispose() {
+  _searchController.dispose();
+  super.dispose();
+}
 
   Future<void> _showAssignmentDialog(
     BuildContext context,
@@ -367,7 +385,41 @@ class ManagePatientsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Manage Patients"),
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: Column(
+  children: [
+    Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: "Search by name or email...",
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchQuery.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+      ),
+    ),
+
+    Expanded(
+      child: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
             .where('role', isEqualTo: 'patient')
@@ -389,7 +441,23 @@ class ManagePatientsScreen extends StatelessWidget {
             );
           }
 
-          final patients = snapshot.data?.docs ?? [];
+          final allPatients = snapshot.data?.docs ?? [];
+
+final patients = allPatients.where((document) {
+  final patient =
+      document.data() as Map<String, dynamic>;
+
+  final name =
+      patient['name']?.toString().toLowerCase() ?? '';
+
+  final email =
+      patient['email']?.toString().toLowerCase() ?? '';
+
+  final query = _searchQuery.trim().toLowerCase();
+
+  return name.contains(query) ||
+      email.contains(query);
+}).toList();
 
           if (patients.isEmpty) {
             return const Center(
@@ -484,6 +552,9 @@ class ManagePatientsScreen extends StatelessWidget {
           );
         },
       ),
+    ),
+  ],
+      )
     );
   }
 }

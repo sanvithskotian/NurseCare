@@ -1,8 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class ManageDoctorsScreen extends StatelessWidget {
+class ManageDoctorsScreen extends StatefulWidget {
   const ManageDoctorsScreen({super.key});
+
+  @override
+  State<ManageDoctorsScreen> createState() =>
+      _ManageDoctorsScreenState();
+}
+
+class _ManageDoctorsScreenState
+    extends State<ManageDoctorsScreen> {
+
+  final TextEditingController _searchController =
+      TextEditingController();
+
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +29,48 @@ class ManageDoctorsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Manage Doctors"),
       ),
-      body: StreamBuilder<QuerySnapshot>(
+      body: Column(
+  children: [
+    Padding(
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        8,
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText:
+              "Search doctor, email or specialization...",
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchQuery.isEmpty
+              ? null
+              : IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                ),
+          border: OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(12),
+          ),
+        ),
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
+      ),
+    ),
+
+    Expanded(
+      child: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
             .where('role', isEqualTo: 'doctor')
@@ -28,7 +88,38 @@ class ManageDoctorsScreen extends StatelessWidget {
             );
           }
 
-          final doctors = snapshot.data!.docs;
+          final allDoctors =
+    snapshot.data?.docs ?? [];
+
+final doctors = allDoctors.where((document) {
+  final doctor =
+      document.data() as Map<String, dynamic>;
+
+  final name =
+      doctor['name']
+              ?.toString()
+              .toLowerCase() ??
+          '';
+
+  final email =
+      doctor['email']
+              ?.toString()
+              .toLowerCase() ??
+          '';
+
+  final specialization =
+      doctor['specialization']
+              ?.toString()
+              .toLowerCase() ??
+          '';
+
+  final query =
+      _searchQuery.trim().toLowerCase();
+
+  return name.contains(query) ||
+      email.contains(query) ||
+      specialization.contains(query);
+}).toList();
 
           if (doctors.isEmpty) {
             return const Center(
@@ -72,6 +163,9 @@ class ManageDoctorsScreen extends StatelessWidget {
             },
           );
         },
+      ),
+    ),
+  ],
       ),
     );
   }
