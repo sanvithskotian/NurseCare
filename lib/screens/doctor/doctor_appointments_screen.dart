@@ -14,10 +14,19 @@ class DoctorAppointmentsScreen extends StatelessWidget {
     String status,
   ) async {
     try {
-      await FirebaseFirestore.instance.collection('appointments').doc(documentId).update({
-        'status': status,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      await FirebaseFirestore.instance
+    .collection('appointments')
+    .doc(documentId)
+    .update({
+  'status': status,
+  'updatedAt': FieldValue.serverTimestamp(),
+
+  if (status == 'Approved') ...{
+    'assignedDoctorId': doctorId,
+    'assignedDoctorName': doctorName,
+    'assignedAt': FieldValue.serverTimestamp(),
+  },
+});
 
       if (status == 'Approved') {
         await FirebaseFirestore.instance.collection('users').doc(patientId).update({
