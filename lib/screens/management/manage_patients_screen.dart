@@ -4,191 +4,361 @@ import 'package:flutter/material.dart';
 class ManagePatientsScreen extends StatelessWidget {
   const ManagePatientsScreen({super.key});
 
-  Future<void> showDoctorAssignmentDialog(
+  Future<void> _showAssignmentDialog(
     BuildContext context,
     String patientId,
     String patientName,
-    String? currentDoctorId,
+    Map<String, dynamic> patient,
   ) async {
-    String? selectedDoctorId = currentDoctorId;
-    String? selectedDoctorName;
+    try {
+      final results = await Future.wait([
+        FirebaseFirestore.instance
+            .collection('users')
+            .where('role', isEqualTo: 'doctor')
+            .get(),
+        FirebaseFirestore.instance
+            .collection('users')
+            .where('role', isEqualTo: 'nurse')
+            .get(),
+      ]);
 
-    final doctorsSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('role', isEqualTo: 'doctor')
-        .get();
+      if (!context.mounted) return;
 
-    if (!context.mounted) return;
+      final doctorsSnapshot = results[0];
+      final nursesSnapshot = results[1];
 
-    if (doctorsSnapshot.docs.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("No doctors available"),
+      String? selectedDoctorId =
+          patient['assignedDoctorId']?.toString();
+
+      String? selectedDoctorName =
+          patient['assignedDoctorName']?.toString();
+
+      final selectedNurseIds = <String>{
+        ...List<String>.from(
+          patient['assignedNurseIds'] ?? [],
         ),
-      );
-      return;
-    }
+      };
 
-    if (currentDoctorId != null) {
-      final currentDoctor = doctorsSnapshot.docs.where(
-        (document) => document.id == currentDoctorId,
-      );
+      final selectedNurseNames = <String>{
+        ...List<String>.from(
+          patient['assignedNurseNames'] ?? [],
+        ),
+      };
 
-      if (currentDoctor.isNotEmpty) {
-        final doctorData =
-            currentDoctor.first.data();
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          bool isSaving = false;
 
-        selectedDoctorName =
-            doctorData['name']?.toString();
-      } else {
-        selectedDoctorId = null;
-      }
-    }
+          return StatefulBuilder(
+            builder: (context, setDialogState) {
+              Future<void> saveAssignments() async {
+                setDialogState(() {
+                  isSaving = true;
+                });
 
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text("Assign Doctor to $patientName"),
-              content: DropdownButtonFormField<String>(
-                initialValue: selectedDoctorId,
-                isExpanded: true,
-                decoration: const InputDecoration(
-                  labelText: "Select Doctor",
-                  border: OutlineInputBorder(),
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(patientId)
+                      .update({
+                    'assignedDoctorId': selectedDoctorId,
+                    'assignedDoctorName': selectedDoctorName,
+                    'assignedNurseIds':
+                        selectedNurseIds.toList(),
+                    'assignedNurseNames':
+                        selectedNurseNames.toList(),
+                    'assignmentUpdatedAt':
+                        FieldValue.serverTimestamp(),
+                    'assignmentSource': 'Management',
+                  });
+
+                  if (!dialogContext.mounted) return;
+
+                  Navigator.pop(dialogContext);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Assignments updated for $patientName",
+                      ),
+                    ),
+                  );
+                } catch (error) {
+                  if (!dialogContext.mounted) return;
+
+                  setDialogState(() {
+                    isSaving = false;
+                  });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Failed to update assignments: $error",
+                      ),
+                    ),
+                  );
+                }
+              }
+
+              return AlertDialog(
+                title: Text(
+                  "Manage $patientName",
                 ),
-                items: doctorsSnapshot.docs.map((document) {
-                  final doctor = document.data();
-
-                  final doctorName =
-                      doctor['name']?.toString() ??
-                          'Doctor';
-
-                  final specialization =
-                      doctor['specialization']?.toString() ??
-                          'General';
-
-                  return DropdownMenuItem<String>(
-                    value: document.id,
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: SingleChildScrollView(
                     child: Column(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment:
                           CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          doctorName,
-                          style: const TextStyle(
+                        const Text(
+                          "Assigned Doctor",
+                          style: TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Text(
-                          specialization,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                        const SizedBox(height: 10),
+
+                        DropdownButtonFormField<String?>(
+                          initialValue: selectedDoctorId,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: "Select Doctor",
+                            border: OutlineInputBorder(),
+                          ),
+                          items: [
+                            const DropdownMenuItem<String?>(
+                              value: null,
+                              child: Text("No doctor assigned"),
+                            ),
+                            ...doctorsSnapshot.docs.map(
+                              (document) {
+                                final doctor = document.data();
+
+                                final doctorName =
+                                    doctor['name']?.toString() ??
+                                        'Unknown Doctor';
+
+                                final specialization =
+                                    doctor['specialization']
+                                            ?.toString() ??
+                                        'General';
+
+                                return DropdownMenuItem<String?>(
+                                  value: document.id,
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        doctorName,
+                                        overflow:
+                                            TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        specialization,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                        overflow:
+                                            TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                          selectedItemBuilder: (context) {
+                            return [
+                              const Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  "No doctor assigned",
+                                ),
+                              ),
+                              ...doctorsSnapshot.docs.map(
+                                (document) {
+                                  final doctor = document.data();
+
+                                  return Align(
+                                    alignment:
+                                        Alignment.centerLeft,
+                                    child: Text(
+                                      doctor['name']
+                                              ?.toString() ??
+                                          'Unknown Doctor',
+                                      overflow:
+                                          TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ];
+                          },
+                          onChanged: isSaving
+                              ? null
+                              : (doctorId) {
+                                  setDialogState(() {
+                                    selectedDoctorId =
+                                        doctorId;
+
+                                    if (doctorId == null) {
+                                      selectedDoctorName =
+                                          null;
+                                      return;
+                                    }
+
+                                    final selectedDoctor =
+                                        doctorsSnapshot.docs
+                                            .firstWhere(
+                                      (document) =>
+                                          document.id ==
+                                          doctorId,
+                                    );
+
+                                    selectedDoctorName =
+                                        selectedDoctor
+                                                .data()['name']
+                                                ?.toString() ??
+                                            'Unknown Doctor';
+                                  });
+                                },
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        const Text(
+                          "Assigned Nurses",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 6),
+
+                        Text(
+                          "Select one or more nurses.",
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        if (nursesSnapshot.docs.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
+                            child: Text(
+                              "No nurses available.",
+                            ),
+                          )
+                        else
+                          ...nursesSnapshot.docs.map(
+                            (document) {
+                              final nurse = document.data();
+
+                              final nurseName =
+                                  nurse['name']?.toString() ??
+                                      'Unknown Nurse';
+
+                              final department =
+                                  nurse['department']
+                                          ?.toString() ??
+                                      '';
+
+                              final isSelected =
+                                  selectedNurseIds.contains(
+                                document.id,
+                              );
+
+                              return CheckboxListTile(
+                                contentPadding: EdgeInsets.zero,
+                                value: isSelected,
+                                controlAffinity:
+                                    ListTileControlAffinity
+                                        .leading,
+                                title: Text(nurseName),
+                                subtitle: department.isEmpty
+                                    ? null
+                                    : Text(department),
+                                onChanged: isSaving
+                                    ? null
+                                    : (selected) {
+                                        setDialogState(() {
+                                          if (selected == true) {
+                                            selectedNurseIds.add(
+                                              document.id,
+                                            );
+
+                                            selectedNurseNames.add(
+                                              nurseName,
+                                            );
+                                          } else {
+                                            selectedNurseIds.remove(
+                                              document.id,
+                                            );
+
+                                            selectedNurseNames
+                                                .remove(
+                                              nurseName,
+                                            );
+                                          }
+                                        });
+                                      },
+                              );
+                            },
+                          ),
                       ],
                     ),
-                  );
-                }).toList(),
-                selectedItemBuilder: (context) {
-                  return doctorsSnapshot.docs.map((document) {
-                    final doctor = document.data();
-
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        doctor['name']?.toString() ??
-                            'Doctor',
-                      ),
-                    );
-                  }).toList();
-                },
-                onChanged: (value) {
-                  if (value == null) return;
-
-                  final selectedDocument =
-                      doctorsSnapshot.docs.firstWhere(
-                    (document) => document.id == value,
-                  );
-
-                  setDialogState(() {
-                    selectedDoctorId = value;
-                    selectedDoctorName =
-                        selectedDocument
-                            .data()['name']
-                            ?.toString() ??
-                        'Doctor';
-                  });
-                },
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                  },
-                  child: const Text("Cancel"),
+                  ),
                 ),
-                FilledButton(
-                  onPressed: selectedDoctorId == null
-                      ? null
-                      : () async {
-                          try {
-                            await FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(patientId)
-                                .update({
-                              'assignedDoctorId':
-                                  selectedDoctorId,
-                              'assignedDoctorName':
-                                  selectedDoctorName,
-                              'doctorAssignedAt':
-                                  FieldValue.serverTimestamp(),
-                              'doctorAssignmentSource':
-                                  'Management',
-                            });
-
-                            if (!dialogContext.mounted) {
-                              return;
-                            }
-
+                actions: [
+                  TextButton(
+                    onPressed: isSaving
+                        ? null
+                        : () {
                             Navigator.pop(dialogContext);
+                          },
+                    child: const Text("Cancel"),
+                  ),
+                  FilledButton(
+                    onPressed:
+                        isSaving ? null : saveAssignments,
+                    child: isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text("Save"),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      );
+    } catch (error) {
+      if (!context.mounted) return;
 
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "$patientName assigned to $selectedDoctorName",
-                                ),
-                              ),
-                            );
-                          } catch (error) {
-                            if (!dialogContext.mounted) {
-                              return;
-                            }
-
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "Failed to assign doctor: $error",
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                  child: const Text("Assign"),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Unable to load staff: $error",
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -204,8 +374,11 @@ class ManagePatientsScreen extends StatelessWidget {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(
-              child: Text("Something went wrong."),
+            return Center(
+              child: Text(
+                "Something went wrong.\n${snapshot.error}",
+                textAlign: TextAlign.center,
+              ),
             );
           }
 
@@ -231,30 +404,47 @@ class ManagePatientsScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             itemCount: patients.length,
             itemBuilder: (context, index) {
-              final document = patients[index];
+              final patientDocument = patients[index];
 
-              final patient =
-                  document.data() as Map<String, dynamic>;
+              final patient = patientDocument.data()
+                  as Map<String, dynamic>;
 
               final patientName =
                   patient['name']?.toString() ??
-                      'Unknown';
+                      'Unknown Patient';
 
               final patientEmail =
                   patient['email']?.toString() ??
-                      'No Email';
-
-              final assignedDoctorId =
-                  patient['assignedDoctorId']?.toString();
+                      'No email available';
 
               final assignedDoctorName =
                   patient['assignedDoctorName']
                       ?.toString();
 
+              final assignedNurseNames =
+                  List<String>.from(
+                patient['assignedNurseNames'] ?? [],
+              );
+
+              final doctorText =
+                  assignedDoctorName == null ||
+                          assignedDoctorName.isEmpty
+                      ? "Not assigned"
+                      : assignedDoctorName;
+
+              final nurseText =
+                  assignedNurseNames.isEmpty
+                      ? "Not assigned"
+                      : assignedNurseNames.join(', ');
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 elevation: 3,
                 child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   leading: const CircleAvatar(
                     backgroundColor: Colors.teal,
                     child: Icon(
@@ -262,23 +452,30 @@ class ManagePatientsScreen extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-                  title: Text(patientName),
-                  subtitle: Text(
-                    assignedDoctorName == null ||
-                            assignedDoctorName.isEmpty
-                        ? "$patientEmail\nDoctor: Not assigned"
-                        : "$patientEmail\nDoctor: $assignedDoctorName",
+                  title: Text(
+                    patientName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      "$patientEmail\n"
+                      "Doctor: $doctorText\n"
+                      "Nurses: $nurseText",
+                    ),
                   ),
                   isThreeLine: true,
                   trailing: const Icon(
-                    Icons.medical_services_outlined,
+                    Icons.manage_accounts_outlined,
                   ),
                   onTap: () {
-                    showDoctorAssignmentDialog(
+                    _showAssignmentDialog(
                       context,
-                      document.id,
+                      patientDocument.id,
                       patientName,
-                      assignedDoctorId,
+                      patient,
                     );
                   },
                 ),
