@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class BookAppointmentScreen extends StatefulWidget {
   const BookAppointmentScreen({super.key});
@@ -13,7 +14,35 @@ class BookAppointmentScreen extends StatefulWidget {
 class _BookAppointmentScreenState
     extends State<BookAppointmentScreen> {
   final dateController = TextEditingController();
-  final timeController = TextEditingController();
+  String? selectedTime;
+
+  Future<void> _selectDate() async {
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: DateTime.now(),
+    firstDate: DateTime.now(),
+    lastDate: DateTime(2100),
+  );
+
+  if (picked != null) {
+    dateController.text =
+        DateFormat('dd MMM yyyy').format(picked);
+  }
+}
+List<String> getTimeSlots() {
+  List<String> slots = [];
+
+  DateTime start = DateTime(2026, 1, 1, 9, 0);
+  DateTime end = DateTime(2026, 1, 1, 17, 0);
+
+  while (!start.isAfter(end)) {
+    slots.add(DateFormat('hh:mm a').format(start));
+    start = start.add(const Duration(minutes: 30));
+  }
+
+  return slots;
+}
+
 
   String? selectedDoctorId;
   String? selectedDoctorName;
@@ -30,7 +59,7 @@ class _BookAppointmentScreenState
     }
 
     if (dateController.text.trim().isEmpty ||
-        timeController.text.trim().isEmpty) {
+    selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please fill all fields"),
@@ -41,19 +70,47 @@ class _BookAppointmentScreenState
 
     final user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please login first"),
-        ),
-      );
-      return;
-    }
+if (user == null) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Please login first"),
+    ),
+  );
+  return;
+}
 
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .get();
+// Check if the selected doctor already has an appointment
+// at the selected date and time.
+final existingAppointment = await FirebaseFirestore.instance
+    .collection('appointments')
+    .where('doctorId', isEqualTo: selectedDoctorId)
+    .where('date', isEqualTo: dateController.text.trim())
+    .where('time', isEqualTo: selectedTime)
+    .where(
+      'status',
+      whereIn: ['Pending', 'Approved'],
+    )
+    .limit(1)
+    .get();
+
+if (existingAppointment.docs.isNotEmpty) {
+  if (!mounted) return;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        "This time slot is already booked. Please choose another time.",
+      ),
+    ),
+  );
+
+  return;
+}
+
+final userDoc = await FirebaseFirestore.instance
+    .collection('users')
+    .doc(user.uid)
+    .get();
 
     final patientName =
         userDoc.data()?['name'] ?? 'Unknown Patient';
@@ -70,19 +127,20 @@ class _BookAppointmentScreenState
       'doctorSpecialization': selectedDoctorSpecialization,
 
       'date': dateController.text.trim(),
-      'time': timeController.text.trim(),
+      'time': selectedTime,
 
       'status': 'Pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
 
     dateController.clear();
-    timeController.clear();
+    
 
     setState(() {
       selectedDoctorId = null;
       selectedDoctorName = null;
       selectedDoctorSpecialization = null;
+      selectedTime = null;
     });
 
     if (!mounted) return;
@@ -97,8 +155,7 @@ class _BookAppointmentScreenState
   @override
   void dispose() {
     dateController.dispose();
-    timeController.dispose();
-    super.dispose();
+     super.dispose();
   }
 
   @override
@@ -206,24 +263,38 @@ selectedDoctorSpecialization =
           const SizedBox(height: 12),
 
           TextField(
-            controller: dateController,
-            decoration: const InputDecoration(
-              labelText: "Date",
-              hintText: "Example: 20 July 2026",
-              border: OutlineInputBorder(),
-            ),
-          ),
+  controller: dateController,
+  readOnly: true,
+  onTap: _selectDate,
+  decoration: const InputDecoration(
+    labelText: "Date",
+    hintText: "Select appointment date",
+    prefixIcon: Icon(Icons.calendar_today),
+    border: OutlineInputBorder(),
+  ),
+),
 
           const SizedBox(height: 12),
 
-          TextField(
-            controller: timeController,
-            decoration: const InputDecoration(
-              labelText: "Time",
-              hintText: "Example: 10:30 AM",
-              border: OutlineInputBorder(),
-            ),
-          ),
+          DropdownButtonFormField<String>(
+  value: selectedTime,
+  decoration: const InputDecoration(
+    labelText: "Select Time",
+    prefixIcon: Icon(Icons.access_time),
+    border: OutlineInputBorder(),
+  ),
+  items: getTimeSlots().map((time) {
+    return DropdownMenuItem(
+      value: time,
+      child: Text(time),
+    );
+  }).toList(),
+  onChanged: (value) {
+    setState(() {
+      selectedTime = value;
+    });
+  },
+),
 
           const SizedBox(height: 20),
 
