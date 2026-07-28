@@ -3,6 +3,7 @@ import 'doctor_prescription_screen.dart';
 import 'doctor_diagnosis_screen.dart';
 import '../nurse/vitals_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../patient/profile_screen.dart';
 
 class DoctorPatientDetailsScreen extends StatelessWidget {
   final String patientId;
@@ -75,7 +76,7 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
                 ),
               ),
               subtitle: Text(
-                "Patient ID: $patientId",
+                "Patient ID: ${patient['patientId'] ?? 'Not Assigned'}",
               ),
             ),
 
@@ -160,6 +161,14 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
   },
 ),
           const SizedBox(height: 20),
+          _actionCard(
+  context,
+  "View Patient Profile",
+  Icons.person_outline,
+  ProfileScreen(
+    patientId: patientId,
+  ),
+),
           _actionCard(
             context,
             "Add Diagnosis",

@@ -4,7 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final String? patientId;
+
+  const ProfileScreen({
+    super.key,
+    this.patientId,
+  });
 
   int calculateAge(DateTime dateOfBirth) {
     final today = DateTime.now();
@@ -85,20 +90,20 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
-
+    final uid = patientId ?? currentUser?.uid;
     return Scaffold(
       appBar: AppBar(
         title: const Text("Profile"),
         centerTitle: true,
       ),
-      body: currentUser == null
+      body: uid == null
           ? const Center(
               child: Text("User is not logged in"),
             )
           : FutureBuilder<DocumentSnapshot>(
               future: FirebaseFirestore.instance
                   .collection('users')
-                  .doc(currentUser.uid)
+                  .doc(uid)
                   .get(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -134,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
 
                 final String email =
                     patient['email']?.toString() ??
-                        currentUser.email ??
+                        currentUser?.email ??
                         'Not available';
 
                 final String phone =
