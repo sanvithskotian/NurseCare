@@ -127,6 +127,7 @@ String? _selectedDepartment;
         'status': 'pending',
         'createdBy': currentUser?.uid,
         'createdAt': FieldValue.serverTimestamp(),
+        'registeredAt': null,
       });
 
       if (!mounted) return;

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'register_screen.dart';
+import '../doctor/doctor_signup_screen.dart';
 import '../patient/patient_dashboard.dart';
 import '../nurse/nurse_dashboard.dart';
 import '../doctor/doctor_dashboard.dart';
 import '../management/management_dashboard.dart';
+import '../nurse/nurse_signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final String role;
@@ -336,24 +337,67 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 20),
 
-            if (widget.role == "Patient")
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account?"),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const RegisterScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text('Sign Up'),
+            if (widget.role.toLowerCase() == 'patient')
+  Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      const Text("Don't have an account?"),
+      TextButton(
+        onPressed: isLoading
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RegisterScreen(),
                   ),
-                ],
-              ),
+                );
+              },
+        child: const Text('Sign Up'),
+      ),
+    ],
+  ),
+
+if (widget.role.toLowerCase() == 'doctor')
+  Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      const Text('First time here?'),
+      TextButton(
+        onPressed: isLoading
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const DoctorSignupScreen(),
+                  ),
+                );
+              },
+        child: const Text('Register'),
+      ),
+    ],
+  ),
+  if (widget.role.toLowerCase() == 'nurse')
+  Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      const Text('First time here?'),
+      TextButton(
+        onPressed: isLoading
+            ? null
+            : () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NurseSignupScreen(),
+                  ),
+                );
+              },
+        child: const Text('Register'),
+      ),
+    ],
+  ),
           ],
         ),
       ),
