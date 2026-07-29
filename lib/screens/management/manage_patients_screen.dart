@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'management_patient_details_screen.dart';
 
 class ManagePatientsScreen extends StatefulWidget {
   const ManagePatientsScreen({super.key});
@@ -506,48 +507,61 @@ final patients = allPatients.where((document) {
                       : assignedNurseNames.join(', ');
 
               return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                elevation: 3,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  leading: const CircleAvatar(
-                    backgroundColor: Colors.teal,
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
-                    ),
-                  ),
-                  title: Text(
-                    patientName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      "$patientEmail\n"
-                      "Doctor: $doctorText\n"
-                      "Nurses: $nurseText",
-                    ),
-                  ),
-                  isThreeLine: true,
-                  trailing: const Icon(
-                    Icons.manage_accounts_outlined,
-                  ),
-                  onTap: () {
-                    _showAssignmentDialog(
-                      context,
-                      patientDocument.id,
-                      patientName,
-                      patient,
-                    );
-                  },
-                ),
+  margin: const EdgeInsets.only(bottom: 12),
+  elevation: 3,
+  child: ListTile(
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 10,
+    ),
+    leading: const CircleAvatar(
+      backgroundColor: Colors.teal,
+      child: Icon(
+        Icons.person,
+        color: Colors.white,
+      ),
+    ),
+    title: Text(
+      patientName,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    subtitle: Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Text(
+        "$patientEmail\n"
+        "Doctor: $doctorText\n"
+        "Nurses: $nurseText",
+      ),
+    ),
+    isThreeLine: true,
+    trailing: const Icon(
+  Icons.arrow_forward_ios,
+  size: 18,
+),
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ManagementPatientDetailsScreen(
+            patientId: patientDocument.id,
+            patientName: patientName,
+            onManageMedicalTeam: () {
+              _showAssignmentDialog(
+                context,
+                patientDocument.id,
+                patientName,
+                patient,
               );
+            },
+          ),
+        ),
+      );
+    },
+  ),
+);
             },
           );
         },
