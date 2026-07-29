@@ -5,6 +5,7 @@ import 'manage_doctors_screen.dart';
 import 'manage_nurses_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../role_selection/role_selection_screen.dart';
+import 'staff_management_screen.dart';
 
 class ManagementDashboard extends StatelessWidget {
   const ManagementDashboard({super.key});
@@ -101,6 +102,12 @@ class ManagementDashboard extends StatelessWidget {
             "Manage Nurses",
             Icons.medical_services,
             const ManageNursesScreen()
+          ),
+          _managementTile(
+            context,
+            "Staff Management",
+            Icons.person_add_alt_1,
+            const StaffManagementScreen(),
           ),
           _managementTile(
             context,
