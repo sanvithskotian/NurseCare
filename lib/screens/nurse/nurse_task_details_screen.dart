@@ -44,36 +44,100 @@ class NurseTaskDetailsScreen extends StatelessWidget {
   }
 
   Future<void> _completeTask(BuildContext context) async {
-    try {
-      await FirebaseFirestore.instance
-          .collection('nurse_tasks')
-          .doc(taskId)
-          .update({
-        'status': 'completed',
-        'completedAt': FieldValue.serverTimestamp(),
-      });
-
-      if (!context.mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Task completed successfully.'),
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        icon: const Icon(
+          Icons.check_circle_outline,
+          color: Colors.green,
+          size: 34,
         ),
-      );
+        title: const Text(
+          "Complete Task?",
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Patient: ${taskData['patientName']}",
+            ),
 
-      Navigator.pop(context);
-    } catch (error) {
-      if (!context.mounted) return;
+            const SizedBox(height: 8),
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            error.toString().replaceFirst('Exception: ', ''),
+            Text(
+              "Task: ${taskData['title']}",
+            ),
+
+            const SizedBox(height: 16),
+
+            const Text(
+              "This action cannot be undone.",
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: const Text("Cancel"),
           ),
-        ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: const Text("Complete"),
+          ),
+        ],
       );
-    }
+    },
+  );
+
+  if (confirm != true) {
+    return;
   }
+
+  try {
+    await FirebaseFirestore.instance
+        .collection('nurse_tasks')
+        .doc(taskId)
+        .update({
+      'status': 'completed',
+      'completedAt': FieldValue.serverTimestamp(),
+    });
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Task completed successfully.',
+        ),
+      ),
+    );
+
+    Navigator.pop(context);
+  } catch (error) {
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          error.toString().replaceFirst(
+                'Exception: ',
+                '',
+              ),
+        ),
+      ),
+    );
+  }
+}
 
   String _formatDueDate(BuildContext context) {
     final dueAt = taskData['dueAt'];
