@@ -4,6 +4,7 @@ import 'doctor_diagnosis_screen.dart';
 import '../nurse/vitals_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../patient/profile_screen.dart';
+import 'doctor_patient_tasks_screen.dart';
 
 class DoctorPatientDetailsScreen extends StatelessWidget {
   final String patientId;
@@ -192,6 +193,15 @@ class DoctorPatientDetailsScreen extends StatelessWidget {
             "View Vitals History",
             Icons.monitor_heart,
             VitalsScreen(
+              patientId: patientId,
+              patientName: patientName,
+            ),
+          ),
+            _actionCard(
+              context,
+              "Nurse Tasks",
+              Icons.assignment,
+              DoctorPatientTasksScreen(
               patientId: patientId,
               patientName: patientName,
             ),
